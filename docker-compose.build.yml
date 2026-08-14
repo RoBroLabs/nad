@@ -1,0 +1,14 @@
+# Developer-only override. End-user installations should use docker-compose.yml
+# by itself so Docker pulls the reviewed multi-architecture release image.
+services:
+  nad:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NAD_VERSION: ${NAD_VERSION:-dev}
+        NAD_GIT_REVISION: ${NAD_GIT_REVISION:-unknown}
+        NAD_BUILD_DATE: ${NAD_BUILD_DATE:-unknown}
+        NAD_SOURCE_URL: ${NAD_SOURCE_URL:-https://github.com/robrolabs/nad}
+        NAD_BUILD_PRODUCTION: ${NAD_BUILD_PRODUCTION:-0}
+    image: nad:${NAD_IMAGE_TAG:-dev}

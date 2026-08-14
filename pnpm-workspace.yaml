@@ -1,0 +1,28 @@
+packages:
+  - .
+
+overrides:
+  browserslist: 4.28.7
+  ip-address: 10.4.0
+  postcss: ^8.5.23
+  recast: 0.23.19
+  sharp: ^0.35.0
+  update-browserslist-db: 1.2.3
+
+peerDependencyRules:
+  allowedVersions:
+    nodemailer: '9'
+
+allowBuilds:
+  bcrypt: true
+  better-sqlite3: true
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+
+onlyBuiltDependencies:
+  - bcrypt
+  - better-sqlite3
+  - esbuild
+  - sharp
+  - unrs-resolver

@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 2,
+  "contractVersion": "2.0",
+  "packageSchemaVersion": 2,
+  "hostApiVersion": "2.0",
+  "hostApiCompatibility": "2.x",
+  "uiApiVersion": "2.0",
+  "uiApiCompatibility": "2.x",
+  "capabilities": [
+    "connections.current",
+    "connections.get",
+    "http.request",
+    "notifications.emit",
+    "storage.get",
+    "storage.set",
+    "storage.delete",
+    "diagnostics.emit",
+    "audit.annotate",
+    "apps.invoke"
+  ],
+  "supportedPackageSchemaVersions": [
+    1,
+    2
+  ],
+  "sha256": "90a0de576b7fc242a091b092ab4d41be85e5627133960ca93df3b2f5e1109386",
+  "files": {
+    "collection.v1.schema.json": "a076a20ed403db10b3f135679a3b59b1b1aa6a74407c71ed1639829ff76cb2a7",
+    "connection-schema.v2.schema.json": "4f195bf7611b58139d435f67c998e1995b29812ca75f87c57f5e6dd3a4241b4b",
+    "host-call.v2.schema.json": "b33c3e526552040ba3faba0aad62483cf3dcaffafd02a318aa301292a5aadeeb",
+    "host-response.v2.schema.json": "167885a70562db9a7948091c795aab3ce7778caef7ce37365beaae92c74d6626",
+    "http-access.v2.schema.json": "98bbebe6e2c15714fea8b0a6e26f44b21ab1afd47f4d005b13368adab8c22420",
+    "invocation-request.v2.schema.json": "58d3947557cf586bee17d5577834a734bc539a3ed839d19c0408d250a2b9cead",
+    "manifest.v2.schema.json": "04aa0018c7743b23ed7b034ac45481f0d3333ab6f5c743e69c2a4a15dde203fa",
+    "operation.v2.schema.json": "bde8a0ef64005d79378f491007925584609cbc66ae31327f34388895a7aa7d33",
+    "release-record.v2.schema.json": "cb462e47808d0b57dd36a2b02f24d2c03e64927b3e0c1fc8a32bec31f01d974e",
+    "review-attestation.v1.schema.json": "43329a8f5ed3997cef4206a9d7ce31a523db6d9419cbd88208215bd18a83f820",
+    "ui-bridge-connect.v2.schema.json": "b7d3778f869adb6f7029421393dd1cec5479c9003cd0f079dba1bdd75cb09cf8",
+    "ui-bridge-message.v2.schema.json": "ee10a76328ab6378c1904ccab5b57b218da1a61af9f766eed34bd44c7ad1eacb",
+    "ui-surfaces.v2.schema.json": "7ddab68b60181e427f344d3fe07def8a5997f90e1ca7bf54c2c45f1eb4574728"
+  }
+}

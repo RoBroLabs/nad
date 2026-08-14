@@ -1,0 +1,109 @@
+name: Docker release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    name: Build ${{ matrix.arch }} image
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            platform: linux/amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            platform: linux/arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Record immutable build identity
+        id: identity
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          test "$version" = "$(tr -d '\r\n' < VERSION)"
+          image="ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "built_at=$(git show -s --format=%cI HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push native image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          platforms: ${{ matrix.platform }}
+          tags: |
+            ${{ steps.identity.outputs.image }}:${{ steps.identity.outputs.version }}-${{ matrix.arch }}
+            ${{ steps.identity.outputs.image }}:sha-${{ steps.identity.outputs.revision }}-${{ matrix.arch }}
+          labels: |
+            org.opencontainers.image.title=NAD
+            org.opencontainers.image.version=${{ steps.identity.outputs.version }}
+            org.opencontainers.image.revision=${{ steps.identity.outputs.revision }}
+            org.opencontainers.image.created=${{ steps.identity.outputs.built_at }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          build-args: |
+            NAD_VERSION=${{ steps.identity.outputs.version }}
+            NAD_GIT_REVISION=${{ steps.identity.outputs.revision }}
+            NAD_BUILD_DATE=${{ steps.identity.outputs.built_at }}
+            NAD_SOURCE_URL=https://github.com/${{ github.repository }}
+            NAD_BUILD_PRODUCTION=1
+          cache-from: type=gha,scope=${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.arch }}
+
+  manifest:
+    name: Publish multi-architecture manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: image
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create immutable manifest tags
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          revision="$(git rev-parse HEAD)"
+          image="ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          docker buildx imagetools create \
+            --tag "$image:$version" \
+            --tag "$image:sha-$revision" \
+            "$image:$version-amd64" \
+            "$image:$version-arm64"
+          docker buildx imagetools inspect "$image:$version"
