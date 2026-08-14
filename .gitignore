@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.ci-artifacts/
+.ci-tools/
+
+# Next.js
+.next/
+out/
+
+# Production build
+build/
+dist/
+
+# Environment files
+.env*
+!.env.example
+
+# Database
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+
+# Drizzle
+drizzle/meta/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local browser test evidence
+output/playwright/
+.playwright-cli/
+test-results/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Misc
+*.log
+# Kimi project memory
+.kimi-memory/

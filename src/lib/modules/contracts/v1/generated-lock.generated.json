@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "contractSha256": "9f4bdc674bcb0c23debdb3fe2b0dd78d7d95123259bec0b9ac66708e67ee81d2",
+  "files": {
+    "checksums.generated.ts": "2a344837eb541f16bac701ea9cd2233b5b9f6055b503a28eaef9136df44145a5",
+    "contract-lock.generated.json": "a82e1cb117b4ea4b398e7e5c425c556c841bcf5f49dc994e904f1a93a378ade5",
+    "data-migration.generated.ts": "3b0327fcbe5c740e11dc882d7b9de6318a25eeeaa3ad9cfa57bc13563532d8da",
+    "endpoint-schema.generated.ts": "c56169791031cc106b3757a9b472f86bb45a35ec68249a6fd8aa1b414de1cb00",
+    "host-call.generated.ts": "f59c5a7c8ce9c49f7270b95958f662a0accf7608607a38dcd208d6717e7b8088",
+    "host-http-response.generated.ts": "3485bc701b0462429610727ba49f56a1c88e4404044960669c426fa62dcbcc7f",
+    "http-access.generated.ts": "fa72d29086354a543f8831eaa31bd9159b62de648a644d8e6dfe1ffa7b4d465c",
+    "index.ts": "5e7786438efd3d299e24d5a356753a19ff610d88d951c7bfdbe67b2f244ff0e5",
+    "manifest.generated.ts": "e51fec4e73ab1df404e517e9017f97dd57dfddbf88e1ba03d5656c96cbe35140",
+    "module-request.generated.ts": "69e27d024e9a98c8cc5c13c7b94f3a115e1d431542ad5b6f62aec85a96c5ceca",
+    "pages.generated.ts": "89a16188b7171e26a96cdd72ea8ea9ca531e84f10d58a8e0a6e209afe7920b57",
+    "release-metadata.generated.ts": "e9c3ea0dbfe3ee2d4c1928cb79eba70d41b2b07b101c9d5aeb9a5281c168cc85",
+    "release-record.generated.ts": "24c5516c35dcafd327e7a719b1f6641a22a95e33fde1a6172c594a02515d94dc",
+    "schemas.generated.ts": "624be7d10d04e1a64ca2a49e7ba9b25af227cea036cc50d6f2978c3d8f96b0a2",
+    "secret-reference.generated.ts": "549ae816f940594b21d821b9f75def2239e7f93271fb4398cf38aa57eb64988b",
+    "signature-envelope.generated.ts": "768a1cc82570e6f6aa9ebee412d9edbca23fd0e3aa316a52641f56ab0869862d",
+    "signature.generated.ts": "27c34f6c48335236e5e3cb8e3b89a62626fcc1ce7afb014b25b8aa7b1018f630",
+    "ui-element.generated.ts": "871e0efa9d4efb9789100f1f8c276e38bce86d68dc224dee153d6c576a506b63",
+    "widgets.generated.ts": "422b53ac528f73cdeada1231b35a1239bae31c08986dc4fc245f1d83c0b81d6e"
+  }
+}

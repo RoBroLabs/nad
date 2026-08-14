@@ -1,0 +1,27 @@
+services:
+  nad-backup:
+    image: ${NAD_IMAGE:?Set NAD_IMAGE to the exact immutable core image tag}
+    restart: unless-stopped
+    read_only: true
+    user: "1001:1001"
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+    command: ["scripts/backup-maintenance.mjs", "--scheduled"]
+    environment:
+      DATABASE_URL: file:./data/nad.db
+      NAD_DATA_DIR: /app/data
+      NAD_BACKUP_DIRECTORY: /app/data/backups
+      NAD_BACKUP_INTERVAL_HOURS: ${NAD_BACKUP_INTERVAL_HOURS:-24}
+      NAD_BACKUP_RETENTION_COUNT: ${NAD_BACKUP_RETENTION_COUNT:-14}
+    volumes:
+      - dashboard_data:/app/data
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+
+volumes:
+  dashboard_data:
+    external: true
+    name: dashboard_data

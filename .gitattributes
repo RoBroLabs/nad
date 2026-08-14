@@ -1,0 +1,6 @@
+docs/evidence/** export-ignore
+docs/PUBLIC_SOURCE.md export-ignore
+.gitea/** export-ignore
+docker-compose.dokploy.yml export-ignore
+data export-ignore
+.github/dependabot.yml export-ignore

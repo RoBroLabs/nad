@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": "1.0",
+  "packageSchemaVersion": 1,
+  "hostApiVersion": "1.0",
+  "hostApiCompatibility": "1.x",
+  "uiApiVersion": "1.0",
+  "uiApiCompatibility": "1.x",
+  "capabilities": [
+    "config.get",
+    "http.request",
+    "notifications.emit",
+    "storage.get",
+    "storage.set",
+    "storage.delete",
+    "audit.annotate"
+  ],
+  "sha256": "9f4bdc674bcb0c23debdb3fe2b0dd78d7d95123259bec0b9ac66708e67ee81d2",
+  "files": {
+    "checksums.schema.json": "a1176c29ffa3171b92ba25a3ead56263d869b84daf2deec386854c932be27f46",
+    "data-migration.v1.schema.json": "fbfb3f82e21872b5e03ff765a8549f22293c60c301e10a905d087b0b4f94828d",
+    "endpoint-schema.v1.schema.json": "440462fb5e6ac527bf0bec6d6fc43b432b93f2be45f4af18638ea67911607963",
+    "host-call.schema.json": "a8a8208e0d788a4a16114dae98e206325f4d369eda1729b5a744c6a435a28820",
+    "host-http-response.schema.json": "2461ccefd8d499b52b0791d0f1a82ee1499b94bc51c509323e0574abc35a9203",
+    "http-access.v1.schema.json": "b1e000bf93ddab875a118f32363bb2d583b19556947564e2e181ddca2350bf07",
+    "manifest.schema.json": "7e264643567481697057321c3520cdce5b8821c556382f9edc341dd543015010",
+    "module-request.schema.json": "a2701f8d75feae86c5cf64f28e7d2a4591db1a25b075907a5f066b2a1de4036f",
+    "release-metadata.schema.json": "906255b68bb33856ea1f5d0a3407882501980c46c03b7aa1990545ab095ed03a",
+    "release-record.schema.json": "13fb613ea7f21125f2a3f7fd47b34c536a152b45072be1c571a7611d9cc00f3b",
+    "secret-reference.schema.json": "9f419fce63bf2e39f15ed4b56dac36ee4cecd46e89e535b3384fca3ef07a6cb1",
+    "signature-envelope.schema.json": "e83f03d90019dd1159bcdcf29f24636e76df769921acb1d2bb7e1eee76d1343f",
+    "signature.schema.json": "ced8a7859860de6e9dcd15dec840c46e51aa9a10e97ad8fba6ba492fbddc285b",
+    "ui-element.v1.schema.json": "e3996309ee20a944efdcaffe59dc8b848496886a1c4d99fc3856c86a91e3e9c8",
+    "ui-pages.schema.json": "13d38db5abc4593a4047580357b5127d23e737210c2a4bd134a9582838b7e63f",
+    "ui-widgets.schema.json": "4562d60bf85acdd4aa0422041b84f29d9f34cf45c8713dc41c88e6725f16bc20"
+  }
+}
