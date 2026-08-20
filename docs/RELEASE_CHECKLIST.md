@@ -41,6 +41,9 @@ pnpm audit --prod
 - [ ] **Native arm64 preflight** passes for the exact candidate revision before
   tag creation; the version-tag workflow then publishes both native images.
   Normal development pushes must not run an ARM build or an hour-long QEMU job.
+- [ ] After the combined manifest exists, generate and verify the deterministic
+  installation ZIP with its exact version, full revision and manifest digest.
+  Record archive SHA-256 and confirm the extracted Compose has no `build:` path.
 - [ ] Confirm the final image runs as non-root, writes only expected volumes,
   contains the intended core version, and has the real `/api/health` probe.
 - [ ] Scan the image and bounded startup logs for vulnerabilities and accidental

@@ -80,6 +80,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: image
+    permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: Checkout
@@ -107,3 +110,31 @@ jobs:
             "$image:$version-amd64" \
             "$image:$version-arm64"
           docker buildx imagetools inspect "$image:$version"
+
+      - name: Create installation bundle and GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          revision="$(git rev-parse HEAD)"
+          image="ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          manifest_file="$(mktemp)"
+          docker buildx imagetools inspect "$image:$version" --raw > "$manifest_file"
+          digest="sha256:$(sha256sum "$manifest_file" | awk '{print $1}')"
+          rm -f "$manifest_file"
+          test "$digest" != 'sha256:'
+          mkdir release-bundle
+          node scripts/generate-install-bundle.mjs \
+            --version "$version" \
+            --revision "$revision" \
+            --image-repository "$image" \
+            --image-digest "$digest" \
+            --out release-bundle \
+            --validate-compose
+          bundle="release-bundle/NAD-${version}-installation-bundle.zip"
+          node scripts/verify-install-bundle.mjs --bundle "$bundle"
+          gh release create "$GITHUB_REF_NAME" \
+            "$bundle" "${bundle}.sha256" \
+            --title "NAD $version" \
+            --generate-notes

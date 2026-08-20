@@ -34,6 +34,35 @@ The normal public installation will pull a combined `amd64`/`arm64` image.
 Source builds use the explicit `docker-compose.build.yml` contributor override
 and are not an end-user installation path.
 
+## Versioned installation bundle
+
+Each supported release supplies a small `NAD-<version>-installation-bundle.zip`
+and adjacent `.sha256` file. The archive contains only `compose.yaml`, a blank
+environment example, concise operator instructions, a file checksum list and a
+machine-readable release manifest. It contains no source tree, build context,
+credentials, private hostname or mutable image tag.
+
+Release maintainers generate it only after the combined registry manifest is
+available:
+
+```bash
+node scripts/generate-install-bundle.mjs \
+  --version <version> \
+  --revision <full-git-sha> \
+  --image-repository ghcr.io/robrolabs/nad \
+  --image-digest sha256:<combined-manifest-digest> \
+  --out <empty-release-directory> \
+  --validate-compose
+```
+
+The generator rejects missing or malformed identities, mutable image references
+and output replacement. Its fixed-time ZIP format makes identical inputs produce
+identical bytes. The tag workflow repeats generation after publishing the
+combined manifest, verifies the archive and attaches both files to the GitHub
+Release. End users should extract that bundle, copy `.env.example` to `.env`,
+set independent secrets and run `docker compose -f compose.yaml up -d`; they
+must not clone this repository or add a `build:` override.
+
 ## Backups
 
 `scripts/backup.mjs` uses SQLite's online backup API and writes manifest-v2

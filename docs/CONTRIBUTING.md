@@ -70,6 +70,12 @@ exact candidate SHA. It uses a native `ubuntu-24.04-arm` runner and local-only
 image tags; it cannot publish to a registry. It must not add an hour to ordinary
 edit/push feedback.
 
+After the release workflow has published the combined image manifest, it
+generates and attaches the deterministic end-user installation bundle. Do not
+hand-edit that ZIP or point it at a tag: use
+`pnpm release:bundle -- --version … --revision … --image-repository …
+--image-digest … --out … --validate-compose` with the exact immutable digest.
+
 There is currently no `format` script. Follow the existing style and ESLint output.
 
 ## Database changes
