@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, join, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
 const bundleSchemaVersion = 1;
@@ -215,6 +215,18 @@ function validateCompose(outputDirectory) {
   }
 }
 
+function extractEntries(entries, outputDirectory) {
+  if (!existsSync(outputDirectory) || readdirSync(outputDirectory).length) {
+    fail('Extraction directory must already exist and be empty.');
+  }
+  for (const [path, data] of entries) {
+    const target = resolve(outputDirectory, path);
+    if (relative(outputDirectory, target).startsWith('..')) fail(`Bundle ZIP has an unsafe extraction path: ${path}`);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, data, { mode: 0o644 });
+  }
+}
+
 export function createInstallationBundle({ version, revision, imageRepository, imageDigest, outputDirectory, validateCompose: shouldValidateCompose = false }) {
   const identity = parseIdentity({ version, revision, imageRepository, imageDigest });
   const output = resolve(outputDirectory ?? '');
@@ -233,13 +245,8 @@ export function createInstallationBundle({ version, revision, imageRepository, i
   if (shouldValidateCompose) {
     const extracted = mkdtempSync(join(tmpdir(), 'nad-install-bundle-'));
     try {
-      for (const entry of entries) {
-        const relative = entry.path.slice(`NAD-${identity.version}/`.length);
-        const target = join(extracted, relative);
-        mkdirSync(resolve(target, '..'), { recursive: true });
-        writeFileSync(target, entry.data);
-      }
-      validateCompose(extracted);
+      extractEntries(parseStoredZip(archive), extracted);
+      validateCompose(join(extracted, `NAD-${identity.version}`));
     } finally {
       rmSync(extracted, { recursive: true, force: true });
     }
@@ -261,6 +268,14 @@ export function verifyInstallationBundle({ bundlePath }) {
   });
   verifyEntries(entries, identity);
   return { archiveSha256: sha256(archive), identity, files: [...entries.keys()].sort() };
+}
+
+export function extractInstallationBundle({ bundlePath, outputDirectory }) {
+  const archive = readFileSync(resolve(bundlePath));
+  const entries = parseStoredZip(archive);
+  const verified = verifyInstallationBundle({ bundlePath });
+  extractEntries(entries, resolve(outputDirectory));
+  return verified;
 }
 
 function main() {

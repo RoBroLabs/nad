@@ -30,6 +30,10 @@ function hasDockerCompose() {
   return spawnSync('docker', ['compose', 'version'], { stdio: 'ignore' }).status === 0;
 }
 
+function hasUnzip() {
+  return spawnSync('unzip', ['-v'], { stdio: 'ignore' }).status === 0;
+}
+
 afterEach(() => {
   directories.splice(0).forEach((value) => rmSync(value, { recursive: true, force: true }));
 });
@@ -47,7 +51,13 @@ describe('installation bundle generator', () => {
     expect(readFileSync(join(first, `${fileName}.sha256`), 'utf8')).toBe(`${firstResult.archiveSha256}  ${fileName}\n`);
 
     const extracted = directory();
-    execFileSync('unzip', ['-q', join(first, fileName), '-d', extracted]);
+    if (hasUnzip()) {
+      execFileSync('unzip', ['-q', join(first, fileName), '-d', extracted]);
+    } else {
+      execFileSync('node', [
+        'scripts/verify-install-bundle.mjs', '--bundle', join(first, fileName), '--extract-to', extracted,
+      ]);
+    }
     const bundleDirectory = join(extracted, 'NAD-1.2.3');
     execFileSync('cp', [join(bundleDirectory, '.env.example'), join(bundleDirectory, '.env')]);
     const compose = readFileSync(join(bundleDirectory, 'compose.yaml'), 'utf8');
