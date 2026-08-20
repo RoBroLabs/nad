@@ -115,7 +115,15 @@ jobs:
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f \
             image --db-repository ghcr.io/aquasecurity/trivy-db:2 --skip-version-check \
-            --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress \
+            --scanners vuln --severity HIGH,CRITICAL --no-progress \
+            "$IMAGE"
+          # Debian's security tracker has no fixed package for some findings.
+          # Keep those visible above, but fail the release gate only when a
+          # HIGH/CRITICAL remediation is available and has not been applied.
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f \
+            image --db-repository ghcr.io/aquasecurity/trivy-db:2 --skip-version-check \
+            --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress \
             "$IMAGE"
 
       - name: Record non-publishing preflight identity

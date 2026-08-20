@@ -85,8 +85,12 @@ jobs:
           docker run --rm --entrypoint deno "$image" --version
       - name: Scan production image
         run: |
+          image="nad:$(tr -d '\r\n' < VERSION)-${{ matrix.tag }}"
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f \
             image --db-repository ghcr.io/aquasecurity/trivy-db:2 --skip-version-check \
-            --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress \
-            "nad:$(tr -d '\r\n' < VERSION)-${{ matrix.tag }}"
+            --scanners vuln --severity HIGH,CRITICAL --no-progress "$image"
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f \
+            image --db-repository ghcr.io/aquasecurity/trivy-db:2 --skip-version-check \
+            --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress "$image"
