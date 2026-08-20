@@ -26,6 +26,10 @@ function generate(outputDirectory: string, extraArguments: string[] = []) {
   ], { encoding: 'utf8' });
 }
 
+function hasDockerCompose() {
+  return spawnSync('docker', ['compose', 'version'], { stdio: 'ignore' }).status === 0;
+}
+
 afterEach(() => {
   directories.splice(0).forEach((value) => rmSync(value, { recursive: true, force: true }));
 });
@@ -34,7 +38,7 @@ describe('installation bundle generator', () => {
   it('creates deterministic, pull-only files and validates extracted Compose without the source tree', () => {
     const first = directory();
     const second = directory();
-    const firstResult = JSON.parse(generate(first, ['--validate-compose']));
+    const firstResult = JSON.parse(generate(first, hasDockerCompose() ? ['--validate-compose'] : []));
     const secondResult = JSON.parse(generate(second));
     const fileName = 'NAD-1.2.3-installation-bundle.zip';
 
@@ -46,10 +50,15 @@ describe('installation bundle generator', () => {
     execFileSync('unzip', ['-q', join(first, fileName), '-d', extracted]);
     const bundleDirectory = join(extracted, 'NAD-1.2.3');
     execFileSync('cp', [join(bundleDirectory, '.env.example'), join(bundleDirectory, '.env')]);
-    const compose = execFileSync('docker', ['compose', '-f', 'compose.yaml', 'config'], {
-      cwd: bundleDirectory,
-      encoding: 'utf8',
-    });
+    const compose = readFileSync(join(bundleDirectory, 'compose.yaml'), 'utf8');
+    if (hasDockerCompose()) {
+      const resolved = execFileSync('docker', ['compose', '-f', 'compose.yaml', 'config'], {
+        cwd: bundleDirectory,
+        encoding: 'utf8',
+      });
+      expect(resolved).toContain(`ghcr.io/robrolabs/nad@${digest}`);
+      expect(resolved).not.toMatch(/(^|\n)\s*build\s*:/);
+    }
     expect(compose).toContain(`ghcr.io/robrolabs/nad@${digest}`);
     expect(compose).not.toMatch(/(^|\n)\s*build\s*:/);
     expect(compose).not.toContain('context:');
