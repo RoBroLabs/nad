@@ -38,9 +38,9 @@ pnpm audit --prod
 ## 3. Build and inspect the image
 
 - [ ] Build without mutable dependency selection and record the image digest.
-- [ ] The explicit pre-release workflow dispatch passes native `amd64` and
-  emulated `arm64` source/image gates. Normal development pushes must not run
-  the hour-long QEMU build.
+- [ ] **Native arm64 preflight** passes for the exact candidate revision before
+  tag creation; the version-tag workflow then publishes both native images.
+  Normal development pushes must not run an ARM build or an hour-long QEMU job.
 - [ ] Confirm the final image runs as non-root, writes only expected volumes,
   contains the intended core version, and has the real `/api/health` probe.
 - [ ] Scan the image and bounded startup logs for vulnerabilities and accidental

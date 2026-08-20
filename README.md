@@ -7,8 +7,9 @@ encrypted configuration, Workspaces, audit, notifications and safe Plugin
 execution. Features are installed as independently released `.nadmod` packages;
 no feature Plugin is compiled into the core image.
 
-> **Release status — 14 August 2026:** the reviewed core `0.3.2` source candidate
-> is public and its GitHub release gate passed. There is no public `v0.3.2` tag
+> **Release status — 20 August 2026:** the reviewed core `0.3.2` source snapshot
+> is public and its GitHub release gate passed. The exact private-to-public SHA
+> mapping is retained in private release staging. There is no public `v0.3.2` tag
 > or anonymously pullable NAD image yet. The latest recorded safe live
 > deployment remains core `0.2.8`.
 > See [Project Status](./docs/STATUS.md) and the
@@ -17,10 +18,11 @@ no feature Plugin is compiled into the core image.
 The withdrawn `v0.3.0` canary exposed a Deno cache problem under the non-root
 container user. `v0.3.1` fixed execution but its canary exposed unsafe routing
 of migrated Workspace identifiers. The `0.3.2` candidate contains both fixes,
-and the browser packaging defect exposed by CI run `1404` is fixed. Public
-source, browser, secret and native-amd64 image gates passed in public GitHub run
-`31794636240`; image publication, native-arm64 pull proof and live promotion
-remain outstanding, so it is not a supported release.
+and the browser packaging defect found in the earlier private Phase 8 run
+`1404` is fixed. Source, browser, secret and native-amd64 image gates passed
+for the public snapshot in GitHub run `31796490683`; image publication,
+native-arm64 pull proof and live promotion remain outstanding, so it is not a
+supported release.
 
 ## Repository boundary
 

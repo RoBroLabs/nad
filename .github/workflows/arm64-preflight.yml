@@ -1,0 +1,131 @@
+name: Native arm64 preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Exact commit SHA or immutable ref to preflight
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Build and inspect native arm64 candidate
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 90
+    env:
+      NAD_SOURCE_URL: https://github.com/robrolabs/nad
+      NAD_CI_TEST_TIMEOUT_MS: 10000
+      NAD_CI_HOOK_TIMEOUT_MS: 30000
+
+    steps:
+      - name: Checkout requested candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Verify native runner and requested revision
+        id: identity
+        shell: bash
+        env:
+          REQUESTED_REF: ${{ inputs.ref }}
+        run: |
+          test "$(uname -m)" = "aarch64"
+          requested_revision="$(git rev-parse --verify --end-of-options "${REQUESTED_REF}^{commit}")"
+          revision="$(git rev-parse HEAD)"
+          test "$revision" = "$requested_revision"
+          version="$(tr -d '\r\n' < VERSION)"
+          test -n "$version"
+          built_at="$(git show -s --format=%cI HEAD)"
+          test -n "$built_at"
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "built_at=$built_at" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build and run native release gate
+        shell: bash
+        run: |
+          docker buildx build --load --platform linux/arm64 \
+            --target release-gate --tag nad-arm64-preflight:release-gate .
+          docker run --rm \
+            --env EXPECTED_MACHINE=aarch64 \
+            --env NAD_CI_TEST_TIMEOUT_MS \
+            --env NAD_CI_HOOK_TIMEOUT_MS \
+            nad-arm64-preflight:release-gate
+
+      - name: Build and inspect native production image
+        id: production
+        shell: bash
+        env:
+          REVISION: ${{ steps.identity.outputs.revision }}
+          VERSION: ${{ steps.identity.outputs.version }}
+          BUILT_AT: ${{ steps.identity.outputs.built_at }}
+        run: |
+          image="nad-arm64-preflight:${REVISION}"
+          docker buildx build --load --platform linux/arm64 --target runner \
+            --build-arg NAD_VERSION="$VERSION" \
+            --build-arg NAD_GIT_REVISION="$REVISION" \
+            --build-arg NAD_BUILD_DATE="$BUILT_AT" \
+            --build-arg NAD_SOURCE_URL="$NAD_SOURCE_URL" \
+            --build-arg NAD_BUILD_PRODUCTION=1 \
+            --tag "$image" .
+          test "$(docker image inspect "$image" --format '{{.Architecture}}')" = "arm64"
+          test "$(docker image inspect "$image" --format '{{.Config.User}}')" = "1001:1001"
+          test "$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$REVISION"
+          test "$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')" = "$VERSION"
+          test "$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.source"}}')" = "$NAD_SOURCE_URL"
+          docker run --rm --entrypoint /nodejs/bin/node "$image" -e '
+            const os = require("node:fs").readFileSync("/etc/os-release", "utf8");
+            if (!/VERSION_CODENAME=bookworm/.test(os)) process.exit(1);
+            console.log("Debian Bookworm confirmed.");
+          '
+          docker run --rm --entrypoint deno "$image" --version | tee deno-version.txt
+          grep --fixed-strings --quiet 'deno 2.7.7' deno-version.txt
+          docker run --rm --entrypoint /nodejs/bin/node "$image" -e '
+            const required = {
+              NAD_VERSION: process.env.NAD_VERSION,
+              NAD_GIT_REVISION: process.env.NAD_GIT_REVISION,
+              NAD_BUILD_DATE: process.env.NAD_BUILD_DATE,
+              NAD_SOURCE_URL: process.env.NAD_SOURCE_URL,
+            };
+            if (Object.values(required).some((value) => !value)) process.exit(1);
+            console.log(JSON.stringify(required));
+          '
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Scan native production image
+        shell: bash
+        env:
+          IMAGE: ${{ steps.production.outputs.image }}
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f \
+            image --db-repository ghcr.io/aquasecurity/trivy-db:2 --skip-version-check \
+            --scanners vuln --severity HIGH,CRITICAL --exit-code 1 --no-progress \
+            "$IMAGE"
+
+      - name: Record non-publishing preflight identity
+        shell: bash
+        env:
+          REVISION: ${{ steps.identity.outputs.revision }}
+          VERSION: ${{ steps.identity.outputs.version }}
+          BUILT_AT: ${{ steps.identity.outputs.built_at }}
+          IMAGE: ${{ steps.production.outputs.image }}
+        run: |
+          {
+            echo '## Native arm64 preflight'
+            echo
+            echo "- Revision: \`$REVISION\`"
+            echo "- Version: \`$VERSION\`"
+            echo "- Build time: \`$BUILT_AT\`"
+            echo "- Local-only image: \`$IMAGE\`"
+            echo '- Runner: `ubuntu-24.04-arm` (`aarch64`)'
+            echo '- Registry publication: none (read-only workflow; no registry login or push step)'
+          } >> "$GITHUB_STEP_SUMMARY"

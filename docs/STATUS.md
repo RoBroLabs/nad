@@ -1,6 +1,6 @@
 # NAD core status
 
-> Last reviewed: 2026-08-14
+> Last reviewed: 2026-08-20
 >
 > Current state: **`0.3.2` source candidate; no supported public release**
 >
@@ -29,12 +29,10 @@ recovery flow have not been proven solely from public bytes.
 |---|---|
 | Source version (`VERSION`, `package.json`) | `0.3.2` |
 | Supported public core | None yet |
-| Frozen code candidate revision | `009adc214deede361d3092f0a3e9b44095ff4471`; subsequent changes are documentation-only |
-| Public source mapping | Recorded in the private release-staging ledger; GitHub `main` is the reviewed source candidate |
-| Public candidate CI | GitHub run `31794636240`: source, browser, secrets and native `amd64` image gate passed |
-| Candidate revision exercised by CI run `1404` | `7636bf1d3cdddc3b455bc906c1bc4e44a1a03612` |
-| Result of run `1404` | Failed browser job: Playwright's CommonJS runtime could not dynamically import a TypeScript module |
-| Current browser fix | Clean exported-source Playwright gate passed locally on 2026-08-14 after replacing the runtime TypeScript import with direct `better-sqlite3` use |
+| Source candidate identity | Exact private/public SHA mappings are retained in private release staging so status documentation does not become stale when a reviewed pre-release workflow changes |
+| Public candidate CI | GitHub run `31796490683` passed source, browser, secrets and native `amd64` image gates for the preceding public snapshot; the current native-arm64 preflight is a separate release blocker |
+| Earlier private Phase 8 run `1404` | Revision `7636bf1d3cdddc3b455bc906c1bc4e44a1a03612`; browser job failed because Playwright's CommonJS runtime could not dynamically import a TypeScript module |
+| Current browser position | The fix replaced that runtime TypeScript import with direct `better-sqlite3` use; the public snapshot browser job passed in run `31796490683` |
 | Current release tag | No `v0.3.2` tag; `v0.3.0` and `v0.3.1` are withdrawn |
 | Latest safe live core revision | `99d297554a2b7782969472ba331dc5327485921f` (`0.2.8`) |
 | Latest safe live image | `nad:0.2.8-99d297554a2b` |
@@ -134,6 +132,6 @@ deployment, recovery and live proof. Do not replace them with inferred results.
 
 ## Evidence
 
-Private dated records remain under [`evidence/`](evidence/README.md). They are
+Private dated records remain under `docs/evidence/`. They are
 excluded from public source snapshots and must never be rewritten to make a
 later release appear complete.

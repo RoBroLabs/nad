@@ -1,6 +1,6 @@
 # Initial public release board
 
-> Audit date: 2026-08-14
+> Audit date: 2026-08-20
 > State: **not ready for public installation**
 > Candidate: core `0.3.2`; latest safe live core `0.2.8`
 
@@ -29,16 +29,17 @@ must never run the source build or QEMU.
 
 ### Exact source and CI
 
-- [x] Fix the browser test packaging failure from run `1404`. The test now uses
-  `better-sqlite3` directly and passed from a clean public-source export on
-  2026-08-14.
+- [x] Fix the browser test packaging failure found in earlier private Phase 8
+  run `1404`. The test now uses `better-sqlite3` directly; the public snapshot
+  browser job passed in GitHub run `31796490683` on 2026-08-14.
 - [x] Merge reviewed changes and record the private/public source-candidate SHA
   mapping. The release tag remains withheld until the image gates pass.
 - [x] Pass frozen install, tests, lint, sequential typecheck/build, production
-  audit, browser and secret scans on the reviewed public code candidate (GitHub
-  run `31794636240`).
+  audit, browser and secret scans on the preceding reviewed public code candidate
+  (GitHub run `31796490683`; exact SHA mapping is in private release staging).
 - [x] Pass the native `amd64` candidate image check without QEMU.
-- [ ] Dispatch and pass the release-only native `arm64` source/image gate.
+- [ ] Dispatch and pass **Native arm64 preflight** for the exact public candidate
+  revision. It must remain non-publishing and use a native ARM runner.
 - [ ] Create annotated tag `v0.3.2` only after all exact-SHA checks pass.
 
 ### Public source snapshots

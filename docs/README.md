@@ -15,7 +15,6 @@ this core-documentation cleanup.
 | [`OPERATIONS.md`](OPERATIONS.md) | Deployment, backup, restore, rollback and recovery |
 | [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) | Reusable unchecked release gate |
 | [`SUPPORT.md`](SUPPORT.md) | Proposed compatibility and support policy |
-| [`PUBLIC_SOURCE.md`](PUBLIC_SOURCE.md) | Reviewed snapshot publication and private-evidence policy |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Development and review workflow |
 | [`MODULE_GUIDE.md`](MODULE_GUIDE.md) | Package compatibility and authoring guide |
 
@@ -23,14 +22,19 @@ Marketplace architecture, catalogue publication and incident runbooks belong
 in the separate `nad-marketplace` repository. SDK, testkit, CLI, schema and
 Plugin development documentation belongs in `nad-plugins`.
 
+Private Gitea additionally retains `docs/PUBLIC_SOURCE.md` (the reviewed
+snapshot-export procedure) and `docs/evidence/` (the operator ledger). Both are
+intentionally excluded from public source exports.
+
 ## Evidence
 
-[`evidence/`](evidence/README.md) is the private operator ledger. Records are
+`docs/evidence/` is the private operator ledger. Records are
 immutable descriptions of the source and deployment tested at that time; they
 do not override current status. The Phase 8 directory is incomplete: it records
 rejected `0.3.0` and `0.3.1` canaries plus partial `0.3.2` work, while final
-deployment, recovery and live-gate placeholders remain open. A later audit also
-confirmed CI run `1404` failed its browser job.
+deployment, recovery and live-gate placeholders remain open. Earlier private
+Phase 8 run `1404` failed its browser job; the later public source snapshot
+passed its browser gate and is recorded in [`STATUS.md`](STATUS.md).
 
 Evidence is deliberately excluded from public release snapshots because it can
 contain internal hostnames, addresses and workstation paths.

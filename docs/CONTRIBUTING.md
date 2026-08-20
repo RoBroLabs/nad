@@ -64,9 +64,11 @@ pnpm audit --prod
 
 Do not run `typecheck` concurrently with `build`; both use `.next/types`.
 
-Normal pushes deliberately run only the native architecture image gate. The
-emulated ARM64 source/image gate is an explicit pre-release workflow dispatch
-and a version-tag gate; it must not add an hour to ordinary edit/push feedback.
+Normal pushes deliberately run only the native-amd64 architecture image gate.
+Before a release tag, manually dispatch **Native arm64 preflight** with the
+exact candidate SHA. It uses a native `ubuntu-24.04-arm` runner and local-only
+image tags; it cannot publish to a registry. It must not add an hour to ordinary
+edit/push feedback.
 
 There is currently no `format` script. Follow the existing style and ESLint output.
 

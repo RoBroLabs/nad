@@ -13,12 +13,14 @@ Plugin source belong in `nad-plugins`.
 5. `docs/MODULE_GUIDE.md` — compatibility contract; read it before changing
    package, Host API or UI API behavior.
 
-Core `0.3.2` is a source candidate, not a supported public release. It is not
-tagged or publicly downloadable. The latest recorded safe live deployment is
-core `0.2.8`. CI run `1404` did not complete the browser gate; its packaging
-defect is now fixed and the clean exported-source browser test passes locally.
-The final public CI, image, live-promotion and recovery evidence remains open.
-Do not convert an implemented feature or partial test run into a release claim.
+Core `0.3.2` is a public source candidate, not a supported public release. Its
+exact private-to-public SHA mapping is retained in release staging; it has no
+release tag or anonymously pullable image. The latest recorded safe live
+deployment is core `0.2.8`. Earlier private Phase 8 run `1404` failed its
+browser job; the public snapshot subsequently passed its complete GitHub release
+gate in run `31796490683`. Native-arm64 publication, live promotion and recovery
+evidence remain open. Do not convert an implemented feature or partial test run
+into a release claim.
 
 ## Product vocabulary
 
@@ -64,7 +66,10 @@ pnpm audit --prod
 ```
 
 Do not run typecheck and build concurrently because Next.js regenerates types.
-Normal pushes run the native image gate; emulated ARM64 work is release-only.
+Normal pushes run the fast native-amd64 image gate. Dispatch **Native arm64
+preflight** with an exact commit SHA before a release tag; it builds local-only
+images on `ubuntu-24.04-arm` and cannot publish. Neither that workflow nor the
+tag release path must be emulated or added to every push.
 Production migrations must remain ordered, idempotent and embedded in
 `src/lib/db/migrate.ts`.
 
