@@ -76,14 +76,21 @@ jobs:
             --build-arg NAD_SOURCE_URL="$NAD_SOURCE_URL" \
             --build-arg NAD_BUILD_PRODUCTION=1 \
             --tag "$image" .
-          test "$(docker image inspect "$image" --format '{{.Architecture}}')" = "arm64"
-          test "$(docker image inspect "$image" --format '{{.Config.User}}')" = "1001:1001"
-          test "$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$REVISION"
-          test "$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')" = "$VERSION"
-          test "$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.source"}}')" = "$NAD_SOURCE_URL"
+          architecture="$(docker image inspect "$image" --format '{{.Architecture}}')"
+          run_user="$(docker image inspect "$image" --format '{{.Config.User}}')"
+          label_revision="$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
+          label_version="$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')"
+          label_source="$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.source"}}')"
+          printf 'architecture=%s user=%s revision=%s version=%s source=%s\n' \
+            "$architecture" "$run_user" "$label_revision" "$label_version" "$label_source"
+          test "$architecture" = "arm64"
+          test "$run_user" = "1001:1001"
+          test "$label_revision" = "$REVISION"
+          test "$label_version" = "$VERSION"
+          test "$label_source" = "$NAD_SOURCE_URL"
           docker run --rm --entrypoint /nodejs/bin/node "$image" -e '
             const os = require("node:fs").readFileSync("/etc/os-release", "utf8");
-            if (!/VERSION_CODENAME=bookworm/.test(os)) process.exit(1);
+            if (!/(VERSION_CODENAME=bookworm|VERSION_ID="?12"?)/.test(os)) process.exit(1);
             console.log("Debian Bookworm confirmed.");
           '
           docker run --rm --entrypoint deno "$image" --version | tee deno-version.txt
