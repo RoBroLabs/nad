@@ -138,3 +138,30 @@ jobs:
             "$bundle" "${bundle}.sha256" \
             --title "NAD $version" \
             --generate-notes
+
+  anonymous-pull:
+    name: Verify anonymous ${{ matrix.arch }} pull
+    needs: manifest
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - name: Pull and inspect published image without registry credentials
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          image="ghcr.io/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]'):$version"
+          docker pull "$image"
+          test "$(docker image inspect "$image" --format '{{.Architecture}}')" = "${{ matrix.arch }}"
+          test "$(docker image inspect "$image" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')" = "$version"
+          docker run --rm --entrypoint deno "$image" --version | grep --fixed-strings --quiet 'deno 2.7.7'
