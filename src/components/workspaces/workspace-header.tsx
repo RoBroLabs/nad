@@ -58,6 +58,7 @@ export function WorkspaceHeader({
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [newTabKind, setNewTabKind] = useState<'grid' | 'surface'>('grid');
@@ -65,6 +66,7 @@ export function WorkspaceHeader({
     ? `${availableSurfaces[0].moduleSlug}:${availableSurfaces[0].surfaceId}`
     : '');
   const canEdit = workspace.access === 'edit';
+  const widgetCount = activeTab.widgets.length;
 
   async function updateWorkspace(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -145,6 +147,7 @@ export function WorkspaceHeader({
       await requestApi(`/api/workspaces/${workspace.id}/tabs/${activeTab.id}`, {
         method: 'DELETE',
       }, 'Workspace tab could not be deleted.');
+      setDeleteOpen(false);
       const next = workspace.tabs.find(({ id }) => id !== activeTab.id);
       if (next) router.push(workspacePath(workspace.id, next.id));
       router.refresh();
@@ -189,10 +192,10 @@ export function WorkspaceHeader({
                   <DropdownMenuItem
                     variant="destructive"
                     disabled={pending}
-                    onClick={() => void deleteActiveTab()}
+                    onClick={() => { setError(null); setDeleteOpen(true); }}
                   >
                     <Trash2 aria-hidden="true" />
-                    Delete “{activeTab.name}”
+                    Delete “{activeTab.name}”…
                   </DropdownMenuItem>
                 </>
               ) : null}
@@ -241,7 +244,7 @@ export function WorkspaceHeader({
         <div id={WORKSPACE_ACTIONS_SLOT_ID} className="flex shrink-0 flex-wrap items-center justify-end gap-2" />
       </header>
 
-      {error && !editOpen && !addOpen ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+      {error && !editOpen && !addOpen && !deleteOpen ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
 
       <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (open) setError(null); }}>
         <DialogContent>
@@ -308,6 +311,32 @@ export function WorkspaceHeader({
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={(open) => { setDeleteOpen(open); if (open) setError(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete “{activeTab.name}”?</DialogTitle>
+            <DialogDescription>
+              {activeTab.kind === 'grid'
+                ? widgetCount === 0
+                  ? 'This tab is empty. Deleting it cannot be undone.'
+                  : `Its ${widgetCount} ${widgetCount === 1 ? 'Widget' : 'Widgets'} and their layout will be removed. This cannot be undone.`
+                : 'The tab will be removed. This cannot be undone.'}
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Your installed plugins, their settings and their connections are not affected.
+          </p>
+          {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+          <DialogFooter>
+            <Button variant="outline" disabled={pending} onClick={() => setDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={pending} onClick={() => void deleteActiveTab()}>
+              <Trash2 data-icon="inline-start" aria-hidden="true" />
+              {pending ? 'Deleting…' : 'Delete tab'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
