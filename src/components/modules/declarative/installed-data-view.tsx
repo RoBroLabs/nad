@@ -13,9 +13,11 @@ import {
   KeyValueList,
   MetricCell,
   MetricGroup,
+  StaleBadge,
   StatusCell,
   displayValue,
   toneName,
+  useStaleness,
 } from '@/components/modules/declarative/primitives';
 
 async function loadModuleData(moduleSlug: string, endpoint: string, connectionProfileId?: string | null): Promise<unknown> {
@@ -209,6 +211,8 @@ export function InstalledDataView({
       : view.refreshInterval,
   });
 
+  const staleAge = useStaleness(query.dataUpdatedAt, view.refreshInterval);
+
   if (query.isLoading) return <LoadingSkeleton className={compact ? 'min-h-24' : 'min-h-48'} />;
 
   if (query.isError) {
@@ -228,17 +232,31 @@ export function InstalledDataView({
   }
 
   const data = query.data;
-  if (view.body?.length) return <DeclarativeElements elements={view.body} data={data} compact={compact} />;
+
+  // The badge is hoisted above every render path below, so a stale widget is
+  // marked whether it draws elements, a table, a key/value list or raw JSON.
+  const withStaleness = (content: React.JSX.Element): React.JSX.Element => (
+    staleAge === null ? content : (
+      <div className="flex flex-col gap-2.5">
+        <StaleBadge age={staleAge} />
+        {content}
+      </div>
+    )
+  );
+
+  if (view.body?.length) {
+    return withStaleness(<DeclarativeElements elements={view.body} data={data} compact={compact} />);
+  }
 
   const rows = objectRows(data);
   if ((view.type === 'table' || view.type === 'status-list' || view.type === 'metrics') && rows.length) {
     const keys = Array.from(new Set(rows.flatMap((row) => Object.keys(row)))).slice(0, compact ? 4 : 8);
-    return (
+    return withStaleness(
       <DataTable
         compact={compact}
         columns={keys.map((key) => ({ key, label: humanizeKey(key) }))}
         rows={rows.slice(0, compact ? 8 : 50).map((row) => keys.map((key) => ({ key, value: row[key] })))}
-      />
+      />,
     );
   }
 
@@ -246,14 +264,14 @@ export function InstalledDataView({
     const record = data && typeof data === 'object' && !Array.isArray(data) ? data as Record<string, unknown> : {};
     const entries = Object.entries(record);
     if (entries.length) {
-      return (
+      return withStaleness(
         <KeyValueList
           columns={compact ? 1 : 2}
           items={entries.slice(0, compact ? 8 : 24).map(([key, value]) => ({
             label: humanizeKey(key),
             value,
           }))}
-        />
+        />,
       );
     }
   }
@@ -262,7 +280,7 @@ export function InstalledDataView({
     return <EmptyNote>{view.emptyMessage ?? 'No data returned.'}</EmptyNote>;
   }
 
-  return (
+  return withStaleness(
     <div className="flex flex-col gap-1.5">
       <p className="text-[0.68rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">
         Raw response
@@ -270,6 +288,6 @@ export function InstalledDataView({
       <pre className="max-h-96 overflow-auto rounded-lg border border-border/60 bg-secondary/45 p-3 font-mono text-xs leading-5">
         {JSON.stringify(data, null, 2)}
       </pre>
-    </div>
+    </div>,
   );
 }

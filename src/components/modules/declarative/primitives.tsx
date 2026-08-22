@@ -1,6 +1,7 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { CircleAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -283,5 +284,60 @@ export function EmptyNote({ children }: { children: ReactNode }): React.JSX.Elem
     <p className="flex min-h-20 items-center justify-center px-4 py-6 text-center text-sm text-muted-foreground">
       {children}
     </p>
+  );
+}
+
+/**
+ * A widget is "stale" when its data is older than the plugin's own declared
+ * refresh interval by a clear margin — it should have polled by now and has
+ * not. Polling pauses while the tab is hidden, so this is the normal way a
+ * dashboard drifts out of date without erroring.
+ *
+ * Nothing renders while data is fresh. A permanent timestamp on every widget
+ * is noise; an indicator that only appears when something needs attention is
+ * the signal.
+ */
+export function stalenessAge(
+  dataUpdatedAt: number,
+  refreshInterval: number | undefined,
+  now: number,
+): string | null {
+  if (!refreshInterval || !dataUpdatedAt) return null;
+  const age = now - dataUpdatedAt;
+  // Two missed polls, with a 60s floor so fast-polling widgets do not flicker
+  // a warning on one slow round trip.
+  if (age < Math.max(refreshInterval * 2.5, 60_000)) return null;
+  return formatAge(age);
+}
+
+export function useStaleness(dataUpdatedAt: number, refreshInterval?: number): string | null {
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!refreshInterval) return;
+    const timer = window.setInterval(() => setTick((value) => value + 1), 30_000);
+    return () => window.clearInterval(timer);
+  }, [refreshInterval]);
+
+  return stalenessAge(dataUpdatedAt, refreshInterval, Date.now());
+}
+
+function formatAge(ms: number): string {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+export function StaleBadge({ age }: { age: string }): React.JSX.Element {
+  return (
+    <span
+      className="inline-flex items-center gap-1 self-start rounded-full border border-warning/30 bg-warning/10 px-2 py-0.5 text-[0.68rem] font-medium text-warning"
+      title="This plugin has not returned fresh data recently."
+    >
+      <CircleAlert className="size-3 shrink-0" aria-hidden="true" />
+      Updated {age}
+    </span>
   );
 }
