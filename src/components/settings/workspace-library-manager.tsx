@@ -121,7 +121,7 @@ export function WorkspaceLibraryManager({
           <DialogTrigger asChild><Button><Plus data-icon="inline-start" />New Workspace</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Create Workspace</DialogTitle><DialogDescription>Shared Workspaces can be assigned after creation. Templates copy layout references but never connection credentials.</DialogDescription></DialogHeader>
-            <form className="space-y-4" onSubmit={create}>
+            <form method="post" className="space-y-4" onSubmit={create}>
               <div className="space-y-2"><Label htmlFor="library-workspace-name">Name</Label><Input id="library-workspace-name" name="name" maxLength={80} required /></div>
               <div className="space-y-2"><Label htmlFor="library-workspace-kind">Type</Label><Select value={kind} onValueChange={(value) => setKind(value as WorkspaceKind)}><SelectTrigger id="library-workspace-kind" className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="shared">Shared</SelectItem><SelectItem value="personal">User-specific</SelectItem><SelectItem value="template">Template</SelectItem></SelectContent></Select></div>
               {kind === 'personal' ? (

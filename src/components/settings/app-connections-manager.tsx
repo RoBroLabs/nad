@@ -257,7 +257,7 @@ function ConnectionForm({
 }): React.JSX.Element {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form method="post" className="space-y-4" onSubmit={onSubmit}>
       <div className="space-y-2"><Label htmlFor={`${profile?.id ?? 'new'}-name`}>Connection name</Label><Input id={`${profile?.id ?? 'new'}-name`} name="name" defaultValue={profile?.name} placeholder="Lab" maxLength={80} required /></div>
       <div className="grid gap-4 sm:grid-cols-2">
         {fields.map((field) => (

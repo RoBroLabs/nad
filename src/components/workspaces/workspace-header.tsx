@@ -252,7 +252,7 @@ export function WorkspaceHeader({
             <DialogTitle>Rename Workspace</DialogTitle>
             <DialogDescription>Names are navigation labels only and do not affect installed plugins.</DialogDescription>
           </DialogHeader>
-          <form className="space-y-4" onSubmit={updateWorkspace}>
+          <form method="post" className="space-y-4" onSubmit={updateWorkspace}>
             <div className="space-y-2">
               <Label htmlFor="workspace-name">Workspace name</Label>
               <Input id="workspace-name" name="name" defaultValue={workspace.name} maxLength={80} required />
@@ -273,7 +273,7 @@ export function WorkspaceHeader({
             <DialogTitle>Add Workspace tab</DialogTitle>
             <DialogDescription>Choose a resizable Widget grid or an installed App/Add-on page. Access is rechecked every time the tab opens.</DialogDescription>
           </DialogHeader>
-          <form className="space-y-4" onSubmit={addTab}>
+          <form method="post" className="space-y-4" onSubmit={addTab}>
             <div className="space-y-2">
               <Label htmlFor="new-workspace-tab">Tab name</Label>
               <Input id="new-workspace-tab" name="name" placeholder="Infrastructure" maxLength={80} required />

@@ -487,7 +487,7 @@ function ChannelDialog({ channel, schemas, onClose, onSaved }: ChannelDialogProp
               : 'Update the saved delivery details. Leave a secret field empty to keep the stored value.'}
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form method="post" className="space-y-4" onSubmit={handleSubmit}>
           {isNew ? (
             <div className="space-y-2">
               <Label htmlFor="channel-type">Delivery method</Label>

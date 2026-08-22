@@ -118,7 +118,7 @@ export function GeneralSettingsForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="max-w-xl space-y-6" onSubmit={handleSubmit}>
+          <form method="post" className="max-w-xl space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="canonicalUrl">Dashboard URL</Label>
               <Input

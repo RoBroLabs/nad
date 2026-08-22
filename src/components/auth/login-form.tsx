@@ -83,7 +83,7 @@ export function LoginForm({
             </Button>
           </div>
         ) : (
-          <form className="space-y-5" onSubmit={handleSubmit}>
+          <form method="post" className="space-y-5" onSubmit={handleSubmit}>
             {setupComplete ? (
               <p className="rounded-lg border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
                 Dashboard created. Sign in with your administrator account.

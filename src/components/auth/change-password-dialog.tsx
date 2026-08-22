@@ -78,7 +78,7 @@ export function ChangePasswordDialog({ open, onOpenChange }: ChangePasswordDialo
             including this one, will be signed out.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form method="post" className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <Label htmlFor="currentPassword">Current password</Label>
             <PasswordInput id="currentPassword" name="currentPassword" autoComplete="current-password" required />

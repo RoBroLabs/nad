@@ -60,7 +60,7 @@ export function WorkspaceCreateDialog({ compact = false }: { compact?: boolean }
           <DialogTitle>Create personal Workspace</DialogTitle>
           <DialogDescription>Add a private set of tabs and Widget layouts. You can use only Apps and connections already assigned to you.</DialogDescription>
         </DialogHeader>
-        <form className="space-y-4" onSubmit={submit}>
+        <form method="post" className="space-y-4" onSubmit={submit}>
           <div className="space-y-2"><Label htmlFor="new-workspace-name">Name</Label><Input id="new-workspace-name" name="name" placeholder="Media room" maxLength={80} required /></div>
           {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
           <DialogFooter><Button type="submit" disabled={pending}>{pending ? 'Creating…' : 'Create Workspace'}</Button></DialogFooter>

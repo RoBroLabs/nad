@@ -181,7 +181,7 @@ export function ModuleConfigForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-7">
+    <form method="post" onSubmit={handleSubmit} className="space-y-7">
       <div className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border/70 bg-card/35">
         {fields.length ? fields.map((field) => (
           <div key={field.key} className="grid gap-3 px-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,1.15fr)] sm:gap-8">

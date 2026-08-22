@@ -323,7 +323,7 @@ export function UsersManager({
       <Dialog open={Boolean(resetUser)} onOpenChange={(open) => { if (!open && !isResetting) { setResetUser(null); restoreDialogFocus(); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Reset password</DialogTitle><DialogDescription>Set a new local password for {resetUser?.name}.</DialogDescription></DialogHeader>
-          <form className="space-y-4" onSubmit={resetPassword}>
+          <form method="post" className="space-y-4" onSubmit={resetPassword}>
             <div className="space-y-2"><Label htmlFor="reset-password">New password</Label><PasswordInput id="reset-password" name="password" autoComplete="new-password" minLength={10} maxLength={1024} required /></div>
             <div className="space-y-2"><Label htmlFor="reset-password-confirmation">Confirm new password</Label><PasswordInput id="reset-password-confirmation" name="passwordConfirmation" autoComplete="new-password" minLength={10} maxLength={1024} required /></div>
             {error ? <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p> : null}
@@ -366,7 +366,7 @@ function UserForm({
   isSubmitting: boolean;
 }): React.JSX.Element {
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form method="post" className="space-y-4" onSubmit={onSubmit}>
       <div className="space-y-2"><Label htmlFor="new-name">Name</Label><Input id="new-name" name="name" required /></div>
       <div className="space-y-2"><Label htmlFor="new-email">Email</Label><Input id="new-email" name="email" type="email" required /></div>
       <div className="space-y-2"><Label htmlFor="new-password">Password</Label><PasswordInput id="new-password" name="password" autoComplete="new-password" minLength={10} maxLength={1024} required /></div>

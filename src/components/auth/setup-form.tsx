@@ -67,7 +67,7 @@ export function SetupForm({ loginUrl }: SetupFormProps): React.JSX.Element {
         </div>
       </CardHeader>
       <CardContent className="p-7 sm:p-8">
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form method="post" className="space-y-6" onSubmit={handleSubmit}>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Your name</Label>
