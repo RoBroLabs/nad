@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -82,9 +83,13 @@ export function AddWidgetDialog({
             <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
               <p className="text-sm font-medium">No Widgets available yet</p>
               <p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-muted-foreground">
-                Install a plugin and give it a working connection. Its Widgets appear here once it is configured
-                and you have permission to view it.
+                Widgets appear here once a plugin is installed, has a working connection, and you have
+                permission to view it.
               </p>
+              {/* Previously a dead end: it named the fix without offering it. */}
+              <Button asChild size="sm" variant="outline" className="mt-4">
+                <Link href="/settings/modules">Go to plugin settings</Link>
+              </Button>
             </div>
           ) : !matches.length ? (
             <p className="py-12 text-center text-sm text-muted-foreground">

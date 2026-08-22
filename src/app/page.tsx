@@ -54,6 +54,8 @@ export default async function DashboardPage(): Promise<React.JSX.Element> {
       <div className="mx-auto w-full max-w-7xl">
         <DashboardWorkspace
           availableWidgets={availableWidgets}
+          isAdmin={session.user.role === 'admin'}
+          installedCount={visibleModuleStates.length}
         />
       </div>
     </AppShell>

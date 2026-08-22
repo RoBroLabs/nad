@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Blocks, Check, CloudUpload, Pencil, RotateCcw, Save } from 'lucide-react';
+import { Check, CloudUpload, Pencil, RotateCcw, Save } from 'lucide-react';
 import { AddWidgetDialog } from '@/components/dashboard/add-widget-dialog';
 import { WidgetGrid } from '@/components/dashboard/widget-grid';
+import { DashboardEmptyState } from '@/components/dashboard/dashboard-empty-state';
 import type {
   AvailableWidget,
   DashboardLayoutState,
@@ -44,11 +45,16 @@ export function DashboardWorkspace({
   layoutEndpoint = '/api/user/layout',
   saveMethod = 'POST',
   canEdit = true,
+  isAdmin = false,
+  installedCount = 0,
 }: {
   availableWidgets: AvailableWidget[];
   layoutEndpoint?: string;
   saveMethod?: 'POST' | 'PUT';
   canEdit?: boolean;
+  isAdmin?: boolean;
+  /** Plugins visible to this user, whatever their configuration state. */
+  installedCount?: number;
 }): React.JSX.Element {
   const layoutQuery = useQuery({
     queryKey: ['dashboard-layout', layoutEndpoint],
@@ -216,22 +222,13 @@ export function DashboardWorkspace({
           />
         </section>
       ) : (
-        <section className="glass-subtle flex min-h-80 flex-col items-center justify-center rounded-2xl px-6 py-14 text-center">
-          <span className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
-            <Blocks className="size-5" aria-hidden="true" />
-          </span>
-          <h2 className="text-lg font-semibold">Your Dashboard is empty</h2>
-          <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-            {canEdit
-              ? 'Add a Widget from a configured plugin to start building your homelab overview.'
-              : 'Nothing has been added to this shared view yet.'}
-          </p>
-          {canEdit ? (
-            <div className="mt-5">
-              <AddWidgetDialog widgets={availableWidgets} onAdd={addWidget} />
-            </div>
-          ) : null}
-        </section>
+        <DashboardEmptyState
+          canEdit={canEdit}
+          isAdmin={isAdmin}
+          installedCount={installedCount}
+          configuredCount={availableWidgets.length}
+          addWidgetSlot={<AddWidgetDialog widgets={availableWidgets} onAdd={addWidget} />}
+        />
       )}
     </div>
   );

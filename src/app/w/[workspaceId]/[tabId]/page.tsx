@@ -93,6 +93,8 @@ export default async function WorkspaceTabPage({ params }: WorkspaceTabPageProps
             layoutEndpoint={`/api/workspaces/${workspace.id}/tabs/${tab.id}/layout`}
             saveMethod="PUT"
             canEdit={workspace.access === 'edit'}
+            isAdmin={session.user.role === 'admin'}
+            installedCount={visibleModuleStates.length}
           />
         ) : tab.surfaceModuleSlug && tab.surfaceId ? (
           <InstalledSandboxSurface
