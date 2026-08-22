@@ -1,6 +1,6 @@
 {
   "name": "nad",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "Modular self-hosted homelab mission control dashboard",
   "license": "AGPL-3.0-only",
