@@ -55,7 +55,7 @@
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-entrance: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);
-  --ease-emphasis: cubic-bezier(0.34, 1.42, 0.64, 1);
+  --ease-emphasis: cubic-bezier(0.23, 1, 0.32, 1);
   --duration-instant: 90ms;
   --duration-fast: 150ms;
   --duration-base: 220ms;
@@ -299,3 +299,33 @@
     transform: none;
   }
 }
+
+/* Touch targets. WCAG asks for 44x44; the compact desktop sizes are correct
+   for a mouse, so the floor is applied only on coarse pointers rather than
+   inflating every control everywhere. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a[href],
+  summary,
+  select,
+  [data-slot="button"],
+  [data-slot="sidebar-menu-button"],
+  [data-slot="dropdown-menu-item"] {
+    min-height: 44px;
+  }
+
+  button:not(:has(span:not(.sr-only))),
+  [data-slot="button"][data-size^="icon"] {
+    min-width: 44px;
+  }
+
+  /* Inline links inside prose keep their natural box; only standalone
+     controls need the enlarged hit area. */
+  p a[href],
+  li a[href],
+  dd a[href] {
+    min-height: 0;
+  }
+}
+
