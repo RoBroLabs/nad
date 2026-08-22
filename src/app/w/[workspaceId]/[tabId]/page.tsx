@@ -81,7 +81,7 @@ export default async function WorkspaceTabPage({ params }: WorkspaceTabPageProps
 
   return (
     <AppShell>
-      <div className="mx-auto w-full max-w-7xl space-y-6">
+      <div className="mx-auto w-full max-w-7xl space-y-4">
         <WorkspaceHeader
           workspace={workspace}
           activeTab={tab}
@@ -92,8 +92,6 @@ export default async function WorkspaceTabPage({ params }: WorkspaceTabPageProps
             availableWidgets={availableWidgets}
             layoutEndpoint={`/api/workspaces/${workspace.id}/tabs/${tab.id}/layout`}
             saveMethod="PUT"
-            eyebrow={workspace.access === 'edit' ? 'Widget grid' : 'Shared view'}
-            title={tab.name}
             canEdit={workspace.access === 'edit'}
           />
         ) : tab.surfaceModuleSlug && tab.surfaceId ? (

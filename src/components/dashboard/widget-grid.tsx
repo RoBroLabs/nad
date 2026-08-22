@@ -46,11 +46,15 @@ export function WidgetGrid({
       draggableCancel=".widget-control"
       onLayoutChange={(_layout, allLayouts) => onLayoutsChange(allLayouts)}
     >
-      {widgets.map((widget) => {
+      {widgets.map((widget, index) => {
         const availableDefinition = availableByKey.get(`${widget.moduleSlug}:${widget.widgetId}`);
         const allowed = Boolean(availableDefinition);
         return (
-          <div key={widget.instanceId}>
+          <div
+            key={widget.instanceId}
+            className="widget-enter"
+            style={{ '--enter-index': index } as React.CSSProperties}
+          >
             <WidgetCard
               title={allowed ? availableDefinition?.name ?? 'Unknown Widget' : 'Unavailable Widget'}
               moduleName={allowed ? availableDefinition?.moduleName ?? widget.moduleSlug : 'Access unavailable'}

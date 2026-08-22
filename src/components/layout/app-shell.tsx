@@ -65,7 +65,7 @@ export async function AppShell({ children }: { children: ReactNode }): Promise<R
       <SidebarInset className="min-w-0 bg-transparent">
         <Header appName={appName} />
         {marketplaceSecurity ? <MarketplaceSecurityBanner state={marketplaceSecurity} /> : null}
-        <main className="flex-1 p-5 sm:p-7 lg:p-9">{children}</main>
+        <main className="flex-1 px-4 py-4 sm:px-6 sm:py-5 lg:px-8">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

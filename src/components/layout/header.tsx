@@ -13,11 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { ChangePasswordDialog } from '@/components/auth/change-password-dialog';
 
+/**
+ * The application bar carries account controls only. The dashboard name lives
+ * in the sidebar and the page's own identity lives in the bar below this one,
+ * so repeating either here only pushed content further down the page.
+ */
 export function Header({ appName }: { appName: string }): React.JSX.Element {
   const { data: session } = useSession();
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
@@ -26,16 +30,14 @@ export function Header({ appName }: { appName: string }): React.JSX.Element {
   const initial = name.charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-12 items-center gap-1 border-b border-border/70 bg-background/85 px-3 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 sm:px-5">
       <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="h-5" />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{appName}</p>
-      </div>
+      <span className="sr-only">{appName}</span>
+      <div className="flex-1" />
       <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button ref={accountMenuTriggerRef} variant="ghost" className="h-9 gap-2 px-2" aria-label="Open account menu">
+          <Button ref={accountMenuTriggerRef} variant="ghost" size="sm" className="gap-2 px-1.5" aria-label="Open account menu">
             <Avatar size="sm">
               {session?.user?.image ? <AvatarImage src={session.user.image} alt="" /> : null}
               <AvatarFallback>{initial}</AvatarFallback>

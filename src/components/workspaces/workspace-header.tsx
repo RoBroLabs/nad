@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { AppWindow, LayoutGrid, Pencil, Pin, PinOff, Plus, Trash2 } from 'lucide-react';
+import { AppWindow, ChevronDown, LayoutGrid, Pencil, Pin, PinOff, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -12,8 +12,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -27,6 +33,13 @@ import { requestApi } from '@/lib/client-api';
 import { cn } from '@/lib/utils';
 import type { WorkspaceDetail, WorkspaceTab } from '@/lib/workspaces/types';
 import { workspacePath } from '@/lib/workspaces/route-paths';
+
+/**
+ * Anything rendered into this element appears on the right of the workspace
+ * bar. The grid mounts its own controls here so the page needs one band of
+ * chrome instead of the two it used to carry.
+ */
+export const WORKSPACE_ACTIONS_SLOT_ID = 'workspace-actions-slot';
 
 export function WorkspaceHeader({
   workspace,
@@ -143,97 +156,160 @@ export function WorkspaceHeader({
   }
 
   return (
-    <header className="space-y-4 border-b border-border/70 pb-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-            {workspace.kind === 'personal' ? 'My Workspace' : 'Shared Workspace'}
-          </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{workspace.name}</h1>
-        </div>
+    <>
+      <header className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border/70 pb-3">
         {canEdit ? (
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" disabled={pending} onClick={() => void togglePinned()} aria-label={workspace.pinned ? 'Unpin Workspace' : 'Pin Workspace'}>
-              {workspace.pinned ? <PinOff aria-hidden="true" /> : <Pin aria-hidden="true" />}
-            </Button>
-            <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (open) setError(null); }}>
-              <DialogTrigger asChild><Button variant="outline"><Pencil data-icon="inline-start" />Rename</Button></DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Rename Workspace</DialogTitle><DialogDescription>Names are navigation labels only and do not affect installed plugins.</DialogDescription></DialogHeader>
-                <form className="space-y-4" onSubmit={updateWorkspace}>
-                  <div className="space-y-2"><Label htmlFor="workspace-name">Workspace name</Label><Input id="workspace-name" name="name" defaultValue={workspace.name} maxLength={80} required /></div>
-                  <div className="space-y-2"><Label htmlFor="workspace-tab-name">Current tab name</Label><Input id="workspace-tab-name" name="tabName" defaultValue={activeTab.name} maxLength={80} required /></div>
-                  {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
-                  <DialogFooter><Button type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save names'}</Button></DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </div>
-        ) : null}
-      </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="-ml-2 h-9 max-w-64 gap-1.5 px-2 text-base font-semibold tracking-tight"
+              >
+                <span className="truncate">{workspace.name}</span>
+                {workspace.pinned ? <Pin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Pinned" /> : null}
+                <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              <DropdownMenuItem onClick={() => { setError(null); setEditOpen(true); }}>
+                <Pencil aria-hidden="true" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled={pending} onClick={() => void togglePinned()}>
+                {workspace.pinned ? <PinOff aria-hidden="true" /> : <Pin aria-hidden="true" />}
+                {workspace.pinned ? 'Unpin Workspace' : 'Pin Workspace'}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { setError(null); setAddOpen(true); }}>
+                <Plus aria-hidden="true" />
+                Add tab
+              </DropdownMenuItem>
+              {workspace.tabs.length > 1 ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    disabled={pending}
+                    onClick={() => void deleteActiveTab()}
+                  >
+                    <Trash2 aria-hidden="true" />
+                    Delete “{activeTab.name}”
+                  </DropdownMenuItem>
+                </>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <h1 className="max-w-64 truncate text-base font-semibold tracking-tight">
+            {workspace.name}
+            <span className="ml-2 text-xs font-normal text-muted-foreground">Shared</span>
+          </h1>
+        )}
 
-      <div className="flex min-w-0 items-center gap-2 overflow-x-auto" aria-label="Workspace tabs">
-        {workspace.tabs.map((tab) => (
-          <Link
-            key={tab.id}
-            href={workspacePath(workspace.id, tab.id)}
-            className={cn(
-              'group relative flex min-h-9 shrink-0 items-center gap-2 border-b-2 px-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
-              tab.id === activeTab.id
-                ? 'border-primary text-foreground'
-                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
-            )}
-            aria-current={tab.id === activeTab.id ? 'page' : undefined}
-          >
-            <span className={cn('size-1.5 rounded-full', tab.id === activeTab.id ? 'bg-primary' : 'bg-border group-hover:bg-muted-foreground')} aria-hidden="true" />
-            {tab.name}
-          </Link>
-        ))}
-        {canEdit ? (
-          <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (open) setError(null); }}>
-            <DialogTrigger asChild><Button variant="ghost" size="sm" className="shrink-0"><Plus data-icon="inline-start" />Tab</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>Add Workspace tab</DialogTitle><DialogDescription>Choose a resizable Widget grid or an installed App/Add-on page. Access is rechecked every time the tab opens.</DialogDescription></DialogHeader>
-              <form className="space-y-4" onSubmit={addTab}>
-                <div className="space-y-2"><Label htmlFor="new-workspace-tab">Tab name</Label><Input id="new-workspace-tab" name="name" placeholder="Infrastructure" maxLength={80} required /></div>
-                <div className="space-y-2">
-                  <Label htmlFor="new-workspace-tab-kind">Tab type</Label>
-                  <Select value={newTabKind} onValueChange={(value) => setNewTabKind(value as 'grid' | 'surface')}>
-                    <SelectTrigger id="new-workspace-tab-kind" className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="grid">Widget grid</SelectItem>
-                      <SelectItem value="surface" disabled={!availableSurfaces.length}>App or Add-on page</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {newTabKind === 'surface' ? (
-                  <div className="space-y-2">
-                    <Label htmlFor="new-workspace-surface">Plugin page</Label>
-                    <Select value={newSurfaceKey} onValueChange={setNewSurfaceKey}>
-                      <SelectTrigger id="new-workspace-surface" className="w-full"><SelectValue placeholder="Choose an installed page" /></SelectTrigger>
-                      <SelectContent>
-                        {availableSurfaces.map((surface) => (
-                          <SelectItem key={`${surface.moduleSlug}:${surface.surfaceId}`} value={`${surface.moduleSlug}:${surface.surfaceId}`}>
-                            {surface.moduleName} · {surface.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : null}
-                {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
-                <DialogFooter><Button type="submit" disabled={pending || (newTabKind === 'surface' && !newSurfaceKey)}>{newTabKind === 'surface' ? <AppWindow data-icon="inline-start" /> : <LayoutGrid data-icon="inline-start" />}{pending ? 'Creating…' : 'Create tab'}</Button></DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        ) : null}
-        {canEdit && workspace.tabs.length > 1 ? (
-          <Button variant="ghost" size="icon-sm" className="ml-auto shrink-0 text-destructive" disabled={pending} onClick={() => void deleteActiveTab()} aria-label={`Delete ${activeTab.name} tab`}>
-            <Trash2 aria-hidden="true" />
-          </Button>
-        ) : null}
-      </div>
+        {workspace.tabs.length > 1 || canEdit ? (
+          <nav className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto" aria-label="Workspace tabs">
+            {workspace.tabs.map((tab) => (
+              <Link
+                key={tab.id}
+                href={workspacePath(workspace.id, tab.id)}
+                className={cn(
+                  'relative flex h-8 shrink-0 items-center rounded-md px-2.5 text-sm outline-none transition-colors duration-100 focus-visible:ring-2 focus-visible:ring-ring',
+                  tab.id === activeTab.id
+                    ? 'bg-muted font-medium text-foreground'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+                )}
+                aria-current={tab.id === activeTab.id ? 'page' : undefined}
+              >
+                {tab.name}
+              </Link>
+            ))}
+            {canEdit ? (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="shrink-0 text-muted-foreground"
+                onClick={() => { setError(null); setAddOpen(true); }}
+                aria-label="Add Workspace tab"
+              >
+                <Plus aria-hidden="true" />
+              </Button>
+            ) : null}
+          </nav>
+        ) : (
+          <div className="flex-1" />
+        )}
+
+        <div id={WORKSPACE_ACTIONS_SLOT_ID} className="flex shrink-0 flex-wrap items-center justify-end gap-2" />
+      </header>
+
       {error && !editOpen && !addOpen ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
-    </header>
+
+      <Dialog open={editOpen} onOpenChange={(open) => { setEditOpen(open); if (open) setError(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Workspace</DialogTitle>
+            <DialogDescription>Names are navigation labels only and do not affect installed plugins.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={updateWorkspace}>
+            <div className="space-y-2">
+              <Label htmlFor="workspace-name">Workspace name</Label>
+              <Input id="workspace-name" name="name" defaultValue={workspace.name} maxLength={80} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="workspace-tab-name">Current tab name</Label>
+              <Input id="workspace-tab-name" name="tabName" defaultValue={activeTab.name} maxLength={80} required />
+            </div>
+            {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+            <DialogFooter><Button type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save names'}</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (open) setError(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Workspace tab</DialogTitle>
+            <DialogDescription>Choose a resizable Widget grid or an installed App/Add-on page. Access is rechecked every time the tab opens.</DialogDescription>
+          </DialogHeader>
+          <form className="space-y-4" onSubmit={addTab}>
+            <div className="space-y-2">
+              <Label htmlFor="new-workspace-tab">Tab name</Label>
+              <Input id="new-workspace-tab" name="name" placeholder="Infrastructure" maxLength={80} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="new-workspace-tab-kind">Tab type</Label>
+              <Select value={newTabKind} onValueChange={(value) => setNewTabKind(value as 'grid' | 'surface')}>
+                <SelectTrigger id="new-workspace-tab-kind" className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="grid">Widget grid</SelectItem>
+                  <SelectItem value="surface" disabled={!availableSurfaces.length}>App or Add-on page</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {newTabKind === 'surface' ? (
+              <div className="space-y-2">
+                <Label htmlFor="new-workspace-surface">Plugin page</Label>
+                <Select value={newSurfaceKey} onValueChange={setNewSurfaceKey}>
+                  <SelectTrigger id="new-workspace-surface" className="w-full"><SelectValue placeholder="Choose an installed page" /></SelectTrigger>
+                  <SelectContent>
+                    {availableSurfaces.map((surface) => (
+                      <SelectItem key={`${surface.moduleSlug}:${surface.surfaceId}`} value={`${surface.moduleSlug}:${surface.surfaceId}`}>
+                        {surface.moduleName} · {surface.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+            {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+            <DialogFooter>
+              <Button type="submit" disabled={pending || (newTabKind === 'surface' && !newSurfaceKey)}>
+                {newTabKind === 'surface' ? <AppWindow data-icon="inline-start" /> : <LayoutGrid data-icon="inline-start" />}
+                {pending ? 'Creating…' : 'Create tab'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

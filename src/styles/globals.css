@@ -29,6 +29,7 @@
   --color-success: hsl(var(--success));
   --color-warning: hsl(var(--warning));
   --color-critical: hsl(var(--critical));
+  --color-verified: hsl(var(--verified));
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -47,6 +48,18 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Motion. One easing vocabulary for the whole product: `standard` for
+     everything routine, `entrance` for things arriving, `exit` for things
+     leaving. Durations stay short — this is an operations tool. */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-entrance: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-emphasis: cubic-bezier(0.34, 1.42, 0.64, 1);
+  --duration-instant: 90ms;
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 380ms;
 }
 
 :root,
@@ -71,10 +84,27 @@
   --border: 217 24% 24%;
   --input: 217 24% 24%;
   --ring: 217 91% 60%;
-  --success: 142 71% 45%;
-  --warning: 38 92% 50%;
-  --critical: 0 72% 51%;
+  --success: 142 66% 52%;
+  --warning: 38 92% 56%;
+  --critical: 0 84% 66%;
+  --verified: 171 62% 48%;
   --radius: 0.75rem;
+
+  /* Elevation. Three steps so a widget, a menu and a dialog can be told
+     apart at a glance. Dark surfaces lift with a light top edge as well as
+     a shadow, because shadow alone is nearly invisible on a dark ground. */
+  --elevation-1:
+    0 1px 0 0 hsl(0 0% 100% / 0.04) inset,
+    0 1px 2px hsl(222 60% 3% / 0.4);
+  --elevation-2:
+    0 1px 0 0 hsl(0 0% 100% / 0.05) inset,
+    0 2px 4px hsl(222 60% 3% / 0.35),
+    0 8px 20px hsl(222 60% 3% / 0.3);
+  --elevation-3:
+    0 1px 0 0 hsl(0 0% 100% / 0.06) inset,
+    0 4px 10px hsl(222 60% 3% / 0.4),
+    0 20px 48px hsl(222 60% 3% / 0.45);
+
   --sidebar: hsl(222 43% 9%);
   --sidebar-foreground: hsl(210 40% 96%);
   --sidebar-primary: hsl(217 91% 60%);
@@ -106,6 +136,23 @@
   --border: 214 25% 84%;
   --input: 214 25% 84%;
   --ring: 217 91% 52%;
+
+  /* These four are darkened for a white card, not reused from the dark
+     theme. The dark-tuned amber lands at roughly 2:1 on white, and it is the
+     colour used for "plugin needs configuration" and for degraded status. */
+  --success: 142 72% 27%;
+  --warning: 32 95% 30%;
+  --critical: 0 74% 42%;
+  --verified: 174 88% 24%;
+
+  --elevation-1: 0 1px 2px hsl(222 40% 20% / 0.07);
+  --elevation-2:
+    0 1px 2px hsl(222 40% 20% / 0.06),
+    0 6px 16px hsl(222 40% 20% / 0.08);
+  --elevation-3:
+    0 2px 6px hsl(222 40% 20% / 0.08),
+    0 18px 44px hsl(222 40% 20% / 0.14);
+
   --sidebar: hsl(210 40% 96%);
   --sidebar-foreground: hsl(222 47% 11%);
   --sidebar-primary: hsl(217 91% 52%);
@@ -139,12 +186,24 @@
 @utility glass {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
-  box-shadow: 0 12px 32px hsl(222 60% 4% / 0.12);
+  box-shadow: var(--elevation-2);
 }
 
 @utility glass-subtle {
   background: hsl(var(--card) / 0.78);
   border: 1px solid hsl(var(--border));
+}
+
+@utility elevation-1 {
+  box-shadow: var(--elevation-1);
+}
+
+@utility elevation-2 {
+  box-shadow: var(--elevation-2);
+}
+
+@utility elevation-3 {
+  box-shadow: var(--elevation-3);
 }
 
 @utility focus-ring {
@@ -153,14 +212,77 @@
   box-shadow: 0 0 0 2px hsl(var(--ring) / 0.65);
 }
 
+/* Widgets arrive in a short stagger. `--enter-index` is set per grid item so
+   a dashboard resolves front-to-back instead of all at once. */
+@keyframes nad-widget-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nad-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility widget-enter {
+  animation: nad-widget-enter var(--duration-slow) var(--ease-entrance) backwards;
+  animation-delay: calc(var(--enter-index, 0) * 45ms);
+}
+
+@utility rise-in {
+  animation: nad-rise var(--duration-base) var(--ease-entrance) backwards;
+  animation-delay: calc(var(--enter-index, 0) * 40ms);
+}
+
+/* Grid interaction. react-grid-layout already emits these state classes;
+   until now nothing was attached to them, so dragging had no feedback. */
+.react-grid-item {
+  transition:
+    transform var(--duration-base) var(--ease-standard),
+    width var(--duration-base) var(--ease-standard),
+    height var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.react-grid-item.react-draggable-dragging,
+.react-grid-item.resizing {
+  z-index: 20;
+  transition: none;
+}
+
+.react-grid-item.react-draggable-dragging > * {
+  box-shadow: var(--elevation-3);
+  transform: scale(1.012);
+  cursor: grabbing;
+}
+
 .react-grid-item.react-grid-placeholder {
   border-radius: var(--radius);
-  background: hsl(var(--primary) / 0.14);
+  border: 1px dashed hsl(var(--primary) / 0.45);
+  background: hsl(var(--primary) / 0.1);
   opacity: 1;
+  transition-duration: var(--duration-fast);
 }
 
 .react-grid-item > .react-resizable-handle::after {
   border-color: hsl(var(--primary) / 0.65);
+  transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.react-grid-item:hover > .react-resizable-handle::after {
+  border-color: hsl(var(--primary));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -171,5 +293,9 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .react-grid-item.react-draggable-dragging > * {
+    transform: none;
   }
 }

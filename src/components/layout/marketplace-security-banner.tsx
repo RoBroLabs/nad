@@ -29,7 +29,7 @@ export function MarketplaceSecurityBanner({
 
   return (
     <aside
-      className="border-b border-warning/35 bg-warning/10 px-5 py-3 text-sm sm:px-7 lg:px-9"
+      className="border-b border-warning/35 bg-warning/10 px-4 py-3 text-sm sm:px-6 lg:px-8"
       role="alert"
       aria-label="Plugin security status"
     >

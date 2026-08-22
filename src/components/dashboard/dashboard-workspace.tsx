@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Blocks, Check, CloudUpload, Pencil, RotateCcw, Save } from 'lucide-react';
 import { AddWidgetDialog } from '@/components/dashboard/add-widget-dialog';
@@ -11,6 +12,7 @@ import type {
 } from '@/components/dashboard/types';
 import { Button } from '@/components/ui/button';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
+import { WORKSPACE_ACTIONS_SLOT_ID } from '@/components/workspaces/workspace-header';
 import { generateId } from '@/lib/utils';
 
 const breakpoints = ['lg', 'md', 'sm', 'xs', 'xxs'];
@@ -22,19 +24,30 @@ async function loadLayout(endpoint: string): Promise<DashboardLayoutState> {
   return result.data;
 }
 
+/**
+ * Renders into the workspace bar when one is on the page, and inline when it
+ * is not — the root dashboard route has no workspace bar above it.
+ */
+function ToolbarSlot({ children }: { children: ReactNode }): React.JSX.Element {
+  const [slot, setSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setSlot(document.getElementById(WORKSPACE_ACTIONS_SLOT_ID));
+  }, []);
+
+  if (slot) return <>{createPortal(children, slot)}</>;
+  return <div className="flex flex-wrap items-center justify-end gap-2">{children}</div>;
+}
+
 export function DashboardWorkspace({
   availableWidgets,
   layoutEndpoint = '/api/user/layout',
   saveMethod = 'POST',
-  title = 'Homelab overview',
-  eyebrow = 'Dashboard',
   canEdit = true,
 }: {
   availableWidgets: AvailableWidget[];
   layoutEndpoint?: string;
   saveMethod?: 'POST' | 'PUT';
-  title?: string;
-  eyebrow?: string;
   canEdit?: boolean;
 }): React.JSX.Element {
   const layoutQuery = useQuery({
@@ -156,32 +169,32 @@ export function DashboardWorkspace({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">{eyebrow}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {saveStatus !== 'idle' || saveError ? (
-            <span className="flex min-h-8 items-center gap-1.5 text-xs text-muted-foreground" role="status" aria-live="polite">
-              {saveError ? null : saveStatus === 'saved'
-                ? <Check className="size-3.5 text-success" aria-hidden="true" />
-                : <CloudUpload className="size-3.5" aria-hidden="true" />}
+    <div className="space-y-4">
+      <ToolbarSlot>
+        {saveStatus !== 'idle' || saveError ? (
+          <span
+            className="flex min-h-8 items-center gap-1.5 text-xs text-muted-foreground transition-opacity duration-200"
+            role="status"
+            aria-live="polite"
+          >
+            {saveError ? null : saveStatus === 'saved'
+              ? <Check className="size-3.5 text-success" aria-hidden="true" />
+              : <CloudUpload className="size-3.5 animate-pulse" aria-hidden="true" />}
+            <span className="hidden sm:inline">
               {saveError ? 'Not saved' : saveStatus === 'saved' ? 'Saved' : 'Saving…'}
             </span>
-          ) : null}
-          {canEdit ? (
-            <>
-              <Button variant="outline" onClick={() => setEditMode((current) => !current)}>
-                {editMode ? <Save data-icon="inline-start" aria-hidden="true" /> : <Pencil data-icon="inline-start" aria-hidden="true" />}
-                {editMode ? 'Finish editing' : 'Edit layout'}
-              </Button>
-              <AddWidgetDialog widgets={availableWidgets} onAdd={addWidget} />
-            </>
-          ) : null}
-        </div>
-      </div>
+          </span>
+        ) : null}
+        {canEdit ? (
+          <>
+            <Button variant={editMode ? 'secondary' : 'outline'} size="sm" onClick={() => setEditMode((current) => !current)}>
+              {editMode ? <Save data-icon="inline-start" aria-hidden="true" /> : <Pencil data-icon="inline-start" aria-hidden="true" />}
+              {editMode ? 'Done' : 'Edit layout'}
+            </Button>
+            <AddWidgetDialog widgets={availableWidgets} onAdd={addWidget} />
+          </>
+        ) : null}
+      </ToolbarSlot>
 
       {saveError ? (
         <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -203,14 +216,21 @@ export function DashboardWorkspace({
           />
         </section>
       ) : (
-        <section className="glass-subtle flex min-h-96 flex-col items-center justify-center rounded-2xl px-6 py-16 text-center">
+        <section className="glass-subtle flex min-h-80 flex-col items-center justify-center rounded-2xl px-6 py-14 text-center">
           <span className="mb-5 flex size-12 items-center justify-center rounded-2xl bg-primary/12 text-primary ring-1 ring-primary/20">
             <Blocks className="size-5" aria-hidden="true" />
           </span>
           <h2 className="text-lg font-semibold">Your Dashboard is empty</h2>
           <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-            Add a Widget from a configured plugin to start building your homelab overview.
+            {canEdit
+              ? 'Add a Widget from a configured plugin to start building your homelab overview.'
+              : 'Nothing has been added to this shared view yet.'}
           </p>
+          {canEdit ? (
+            <div className="mt-5">
+              <AddWidgetDialog widgets={availableWidgets} onAdd={addWidget} />
+            </div>
+          ) : null}
         </section>
       )}
     </div>

@@ -1,11 +1,22 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { RotateCcw } from 'lucide-react';
 import type {
   InstalledDataView as InstalledDataViewDefinition,
   InstalledUiElement,
 } from '@/lib/modules/types';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
+import {
+  DataTable,
+  EmptyNote,
+  KeyValueList,
+  MetricCell,
+  MetricGroup,
+  StatusCell,
+  displayValue,
+  toneName,
+} from '@/components/modules/declarative/primitives';
 
 async function loadModuleData(moduleSlug: string, endpoint: string, connectionProfileId?: string | null): Promise<unknown> {
   const response = await fetch(
@@ -17,12 +28,6 @@ async function loadModuleData(moduleSlug: string, endpoint: string, connectionPr
   return result.data;
 }
 
-function displayValue(value: unknown): string {
-  if (value === null || value === undefined) return '—';
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
-  return JSON.stringify(value);
-}
-
 function valueAtPath(value: unknown, path: string): unknown {
   return path.split('.').reduce<unknown>((current, segment) => {
     if (!current || typeof current !== 'object' || Array.isArray(current)) return undefined;
@@ -30,76 +35,134 @@ function valueAtPath(value: unknown, path: string): unknown {
   }, value);
 }
 
-function toneClass(value: unknown): string {
-  if (value === 'critical' || value === 'error' || value === 'offline') return 'text-destructive';
-  if (value === 'warning' || value === 'degraded') return 'text-amber-500';
-  if (value === 'ok' || value === 'online' || value === 'healthy') return 'text-emerald-500';
-  return 'text-foreground';
+type MeasureElement = Extract<InstalledUiElement, { type: 'metric' | 'status' }>;
+
+/**
+ * Adjacent metrics and statuses are collected into one run so they can share a
+ * grid. Declaration order is preserved: a run ends as soon as another element
+ * type appears.
+ */
+type StandaloneElement = Exclude<InstalledUiElement, MeasureElement>;
+
+type ElementRun =
+  | { kind: 'measures'; elements: MeasureElement[] }
+  | { kind: 'single'; element: StandaloneElement };
+
+function groupElements(elements: InstalledUiElement[]): ElementRun[] {
+  const runs: ElementRun[] = [];
+  for (const element of elements) {
+    if (element.type === 'metric' || element.type === 'status') {
+      const last = runs[runs.length - 1];
+      if (last?.kind === 'measures') last.elements.push(element);
+      else runs.push({ kind: 'measures', elements: [element] });
+      continue;
+    }
+    runs.push({ kind: 'single', element });
+  }
+  return runs;
 }
 
-function DeclarativeElements({ elements, data }: { elements: InstalledUiElement[]; data: unknown }): React.JSX.Element {
+function MeasureRun({
+  elements,
+  data,
+  compact,
+}: {
+  elements: MeasureElement[];
+  data: unknown;
+  compact: boolean;
+}): React.JSX.Element {
   return (
-    <div className="space-y-4">
+    <MetricGroup compact={compact}>
       {elements.map((element, index) => {
+        const value = valueAtPath(data, element.valuePath);
+        const tone = toneName(element.tonePath ? valueAtPath(data, element.tonePath) : value);
+        return element.type === 'status' ? (
+          <StatusCell key={index} label={element.label} value={value} tone={tone} />
+        ) : (
+          <MetricCell
+            key={index}
+            label={element.label}
+            value={value}
+            unit={element.unit}
+            tone={tone}
+            compact={compact}
+          />
+        );
+      })}
+    </MetricGroup>
+  );
+}
+
+function DeclarativeElements({
+  elements,
+  data,
+  compact = false,
+}: {
+  elements: InstalledUiElement[];
+  data: unknown;
+  compact?: boolean;
+}): React.JSX.Element {
+  return (
+    <div className="flex flex-col gap-5">
+      {groupElements(elements).map((run, runIndex) => {
+        if (run.kind === 'measures') {
+          return <MeasureRun key={runIndex} elements={run.elements} data={data} compact={compact} />;
+        }
+
+        const element = run.element;
+
         if (element.type === 'section') {
           return (
-            <section key={index} className="space-y-3">
-              {element.title ? <h3 className="text-sm font-medium">{element.title}</h3> : null}
-              <DeclarativeElements elements={element.body} data={data} />
+            <section key={runIndex} className="flex flex-col gap-3">
+              {element.title ? (
+                <h3 className="text-[0.68rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                  {element.title}
+                </h3>
+              ) : null}
+              <DeclarativeElements elements={element.body} data={data} compact={compact} />
             </section>
           );
         }
-        if (element.type === 'metric' || element.type === 'status') {
-          const value = valueAtPath(data, element.valuePath);
-          const tone = element.tonePath ? valueAtPath(data, element.tonePath) : value;
+
+        if (element.type === 'text') {
           return (
-            <div key={index} className="inline-flex min-w-28 flex-col border-l border-border/70 pl-3 pr-5">
-              <span className="text-xs text-muted-foreground">{element.label}</span>
-              <span className={`mt-1 text-lg font-semibold ${toneClass(tone)}`}>
-                {displayValue(value)}{element.type === 'metric' && element.unit ? ` ${element.unit}` : ''}
-              </span>
-            </div>
+            <p key={runIndex} className="text-sm leading-6 text-muted-foreground">
+              {element.value ?? displayValue(valueAtPath(data, element.valuePath ?? ''))}
+            </p>
           );
         }
-        if (element.type === 'text') {
-          return <p key={index} className="text-sm leading-6">{element.value ?? displayValue(valueAtPath(data, element.valuePath ?? ''))}</p>;
-        }
+
         if (element.type === 'keyValue') {
           return (
-            <dl key={index} className="grid grid-cols-1 gap-x-5 sm:grid-cols-2">
-              {element.items.map((item) => (
-                <div key={item.label} className="flex items-baseline justify-between gap-4 border-b border-border/45 py-2">
-                  <dt className="text-xs text-muted-foreground">{item.label}</dt>
-                  <dd className="max-w-[65%] truncate text-sm font-medium">
-                    {displayValue(valueAtPath(data, item.valuePath))}{item.unit ? ` ${item.unit}` : ''}
-                  </dd>
-                </div>
-              ))}
-            </dl>
+            <KeyValueList
+              key={runIndex}
+              columns={compact ? 1 : 2}
+              items={element.items.map((item) => ({
+                label: item.label,
+                value: valueAtPath(data, item.valuePath),
+                unit: item.unit,
+              }))}
+            />
           );
         }
+
         const rowValue = valueAtPath(data, element.rowsPath);
         const rows = Array.isArray(rowValue)
           ? rowValue.filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object' && !Array.isArray(row))
           : [];
-        if (!rows.length) return <p key={index} className="py-8 text-center text-sm text-muted-foreground">{element.emptyText ?? 'No rows returned.'}</p>;
+        if (!rows.length) {
+          return <EmptyNote key={runIndex}>{element.emptyText ?? 'No rows returned.'}</EmptyNote>;
+        }
         return (
-          <div key={index} className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="text-muted-foreground"><tr>{element.columns.map((column) => (
-                <th key={column.key} className="border-b border-border/60 px-2 py-2 font-medium">{column.label}</th>
-              ))}</tr></thead>
-              <tbody>{rows.slice(0, 50).map((row, rowIndex) => (
-                <tr key={rowIndex} className="border-b border-border/35 last:border-0">
-                  {element.columns.map((column) => (
-                    <td key={column.key} className={`max-w-56 truncate px-2 py-2 ${column.valuePath === 'status' ? toneClass(valueAtPath(row, column.valuePath)) : ''}`}>
-                      {displayValue(valueAtPath(row, column.valuePath))}
-                    </td>
-                  ))}
-                </tr>
-              ))}</tbody>
-            </table>
-          </div>
+          <DataTable
+            key={runIndex}
+            compact={compact}
+            columns={element.columns.map((column) => ({ key: column.key, label: column.label }))}
+            rows={rows.slice(0, compact ? 12 : 50).map((row) => element.columns.map((column) => ({
+              key: column.key,
+              value: valueAtPath(row, column.valuePath),
+            })))}
+          />
         );
       })}
     </div>
@@ -115,6 +178,15 @@ function objectRows(value: unknown): Array<Record<string, unknown>> {
     }
   }
   return [];
+}
+
+/** Turns a data key into something readable when a plugin declared no labels. */
+function humanizeKey(key: string): string {
+  const spaced = key
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z\d])([A-Z])/g, '$1 $2')
+    .trim();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
 export function InstalledDataView({
@@ -136,16 +208,19 @@ export function InstalledDataView({
       ? false
       : view.refreshInterval,
   });
+
   if (query.isLoading) return <LoadingSkeleton className={compact ? 'min-h-24' : 'min-h-48'} />;
+
   if (query.isError) {
     return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/8 p-3 text-sm">
+      <div className="flex flex-col items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/8 p-3 text-sm">
         <p role="alert" className="text-destructive">{query.error.message}</p>
         <button
           type="button"
-          className="mt-2 rounded-sm font-medium text-destructive underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex items-center gap-1.5 rounded-sm font-medium text-destructive underline underline-offset-4 outline-none transition-opacity duration-100 hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring"
           onClick={() => void query.refetch()}
         >
+          <RotateCcw className="size-3.5" aria-hidden="true" />
           Try again
         </button>
       </div>
@@ -153,39 +228,48 @@ export function InstalledDataView({
   }
 
   const data = query.data;
-  if (view.body?.length) return <DeclarativeElements elements={view.body} data={data} />;
+  if (view.body?.length) return <DeclarativeElements elements={view.body} data={data} compact={compact} />;
+
   const rows = objectRows(data);
   if ((view.type === 'table' || view.type === 'status-list' || view.type === 'metrics') && rows.length) {
-    const columns = Array.from(new Set(rows.flatMap((row) => Object.keys(row)))).slice(0, compact ? 4 : 8);
+    const keys = Array.from(new Set(rows.flatMap((row) => Object.keys(row)))).slice(0, compact ? 4 : 8);
     return (
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead className="text-muted-foreground">
-            <tr>{columns.map((column) => <th key={column} className="border-b border-border/60 px-2 py-2 font-medium">{column}</th>)}</tr>
-          </thead>
-          <tbody>{rows.slice(0, compact ? 8 : 50).map((row, rowIndex) => (
-            <tr key={rowIndex} className="border-b border-border/35 last:border-0">
-              {columns.map((column) => <td key={column} className="max-w-56 truncate px-2 py-2">{displayValue(row[column])}</td>)}
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
+      <DataTable
+        compact={compact}
+        columns={keys.map((key) => ({ key, label: humanizeKey(key) }))}
+        rows={rows.slice(0, compact ? 8 : 50).map((row) => keys.map((key) => ({ key, value: row[key] })))}
+      />
     );
   }
+
   if (view.type === 'key-value' || view.type === 'metrics') {
     const record = data && typeof data === 'object' && !Array.isArray(data) ? data as Record<string, unknown> : {};
     const entries = Object.entries(record);
     if (entries.length) {
-      return <dl className="grid grid-cols-1 gap-x-5 sm:grid-cols-2">{entries.slice(0, compact ? 8 : 24).map(([key, value]) => (
-        <div key={key} className="flex items-baseline justify-between gap-4 border-b border-border/45 py-2">
-          <dt className="text-xs text-muted-foreground">{key}</dt>
-          <dd className="max-w-[65%] truncate text-sm font-medium">{displayValue(value)}</dd>
-        </div>
-      ))}</dl>;
+      return (
+        <KeyValueList
+          columns={compact ? 1 : 2}
+          items={entries.slice(0, compact ? 8 : 24).map(([key, value]) => ({
+            label: humanizeKey(key),
+            value,
+          }))}
+        />
+      );
     }
   }
+
   if (data === null || data === undefined || (Array.isArray(data) && data.length === 0)) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">{view.emptyMessage ?? 'No data returned.'}</p>;
+    return <EmptyNote>{view.emptyMessage ?? 'No data returned.'}</EmptyNote>;
   }
-  return <pre className="max-h-96 overflow-auto rounded-lg bg-secondary/45 p-3 text-xs leading-5">{JSON.stringify(data, null, 2)}</pre>;
+
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="text-[0.68rem] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        Raw response
+      </p>
+      <pre className="max-h-96 overflow-auto rounded-lg border border-border/60 bg-secondary/45 p-3 font-mono text-xs leading-5">
+        {JSON.stringify(data, null, 2)}
+      </pre>
+    </div>
+  );
 }
