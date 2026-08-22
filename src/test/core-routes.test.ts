@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -11,6 +11,11 @@ import type { Session } from 'next-auth';
 // session mocked at the module boundary. DATABASE_URL must be set before any
 // database-touching module is imported.
 // =============================================================================
+
+// NAD_CORE_VERSION is resolved at import time, before these tests can set
+// NAD_VERSION, so it falls through to the root VERSION file. Read the same
+// source rather than hardcoding it, so a release bump cannot break this test.
+const rootVersion = readFileSync(new URL('../../VERSION', import.meta.url), 'utf8').trim();
 
 const dataDirectory = mkdtempSync(join(tmpdir(), 'nad-core-routes-test-'));
 process.env.DATABASE_URL = `file:${join(dataDirectory, 'test.db')}`;
@@ -254,7 +259,7 @@ describe('build info route', () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       data: {
-        coreVersion: '0.3.2',
+        coreVersion: rootVersion,
         hostApiVersion: '1.0',
         hostApiCompatibility: '1.x',
         uiApiVersion: '1.0',
