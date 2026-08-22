@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { CommandPaletteHint } from '@/components/layout/command-palette';
 import { ChangePasswordDialog } from '@/components/auth/change-password-dialog';
 
 /**
@@ -34,6 +35,19 @@ export function Header({ appName }: { appName: string }): React.JSX.Element {
       <SidebarTrigger className="-ml-1" />
       <span className="sr-only">{appName}</span>
       <div className="flex-1" />
+      {/* Advertises the palette. Dispatching the real shortcut keeps one code
+          path, so the button and the keystroke can never drift apart. */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-1.5 px-2 text-muted-foreground"
+        aria-label="Open the command palette"
+        onClick={() => window.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'k', metaKey: true, bubbles: true }),
+        )}
+      >
+        <CommandPaletteHint />
+      </Button>
       <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>

@@ -4,6 +4,7 @@ import { hasPermission } from '@/lib/auth/permissions';
 import { getEnabledModuleStates } from '@/lib/modules/registry';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Header } from '@/components/layout/header';
+import { CommandPalette } from '@/components/layout/command-palette';
 import { MarketplaceSecurityBanner } from '@/components/layout/marketplace-security-banner';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { getAppName } from '@/lib/settings';
@@ -61,6 +62,11 @@ export async function AppShell({ children }: { children: ReactNode }): Promise<R
         canCreatePersonalWorkspaces={session ? canCreatePersonalWorkspace(session.user.id) : false}
         showSettings={session?.user.role === 'admin'}
         version={process.env.NAD_VERSION ?? 'dev'}
+      />
+      <CommandPalette
+        workspaces={workspaces}
+        modules={modules.map(({ slug, name, icon }) => ({ slug, name, icon }))}
+        showSettings={session?.user.role === 'admin'}
       />
       <SidebarInset className="min-w-0 bg-transparent">
         <Header appName={appName} />
