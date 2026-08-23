@@ -2,141 +2,123 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](./LICENSE)
 
-NAD is a self-hosted homelab Dashboard. The core owns identity, permissions,
-encrypted configuration, Workspaces, audit, notifications and safe Plugin
-execution. Features are installed as independently released `.nadmod` packages;
-no feature Plugin is compiled into the core image.
+A self-hosted control plane for your homelab. NAD gives you one dashboard over
+the services you already run — Proxmox, Unraid, Pi-hole, bare metal — with
+Workspaces you arrange yourself and Widgets you choose.
 
-> **Release status — 20 August 2026:** the reviewed core `0.3.2` source snapshot
-> is public and its GitHub release gate passed. The exact private-to-public SHA
-> mapping is retained in private release staging. There is no public `v0.3.2` tag
-> or anonymously pullable NAD image yet. The latest recorded safe live
-> deployment remains core `0.2.8`.
-> See [Project Status](./docs/STATUS.md) and the
-> [Initial Public Release Board](./docs/INITIAL_PUBLIC_RELEASE.md).
+NAD ships with nothing installed. You decide what it can see.
 
-The withdrawn `v0.3.0` canary exposed a Deno cache problem under the non-root
-container user. `v0.3.1` fixed execution but its canary exposed unsafe routing
-of migrated Workspace identifiers. The `0.3.2` candidate contains both fixes,
-and the browser packaging defect found in the earlier private Phase 8 run
-`1404` is fixed. Source, browser, secret and native-amd64 image gates passed
-for the public snapshot in GitHub run `31796490683`; image publication,
-native-arm64 pull proof and live promotion remain outstanding, so it is not a
-supported release.
+## Install
 
-## Repository boundary
+```bash
+curl -O https://raw.githubusercontent.com/RoBroLabs/nad/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/RoBroLabs/nad/main/.env.example
+mv .env.example .env
 
-| Repository | Responsibility |
-|---|---|
-| `nad` | Self-hosted Dashboard core and isolated Plugin host |
-| `nad-marketplace` | Hosted catalogue, signed metadata and immutable downloads |
-| `nad-plugins` | Plugin Development Kit and reviewed Plugin source |
+# Generate the two required secrets and put them in .env
+openssl rand -base64 32   # APP_SECRET
+openssl rand -base64 32   # AUTH_SECRET
 
-Private Gitea repositories remain the working history. Reviewed source
-candidates are now published to GitHub; unfinished Plugins and private operator
-evidence are not included in those snapshots.
+docker compose up -d
+```
 
-## Implemented core
+Open <http://localhost:3000>. The first visit takes you to `/setup` to create
+the administrator account.
 
-- First-run administrator setup, local credential login, session invalidation,
-  `admin`, `member` and `restricted` roles, and server-side authorization.
-- SQLite persistence, ordered migrations, audit history, personal/shared
-  Workspaces, layouts and profile-level access.
-- Schema-v1 settings and schema-v2 named connections with AES-256-GCM encrypted
-  secrets that never reach browsers or Add-ons.
-- Core-owned email/SMTP, Telegram and ntfy notification channels. Plugins
-  request delivery through the Host API.
-- Signed package verification, bounded archive handling, compatibility checks,
-  persistent active/retained artifacts, restart-free activation, rollback,
-  disable and uninstall.
-- Short-lived Deno execution with external HTTP and notifications brokered by
-  core; direct network, environment, write, subprocess, FFI and runtime-import
-  access is denied.
-- Core-rendered schema-v1 UI and schema-v2 Widget/page surfaces in an opaque
-  sandbox with a bounded bridge.
-- Online Marketplace browsing plus the same verifier for offline manual upload.
-- Verified backup tooling that includes SQLite and installed Plugin artifacts.
+Images are published to the GitHub Container Registry for `linux/amd64` and
+`linux/arm64`, so a Raspberry Pi, an ARM VPS and an x86 server all pull the same
+tag with nothing to build:
 
-A fresh NAD installation starts with zero Plugins.
+```bash
+docker pull ghcr.io/robrolabs/nad:0.3.3
+```
 
-## Candidate Plugin state
+[`docs/OPERATIONS.md`](docs/OPERATIONS.md) covers reverse proxies, backup,
+restore, rollback and account recovery.
 
-Plugin source and releases are independent of core readiness. None should be
-presented as public-stable until it passes its own final-image gate.
+## Adding plugins
 
-| Plugin | Current evidence |
-|---|---|
-| System Monitor `1.0.3` | Reference package; restart, notification, rollback and restore evidence exists |
-| Proxmox VE `1.0.2` | Credentialed read/action, hot-update and restore evidence exists |
-| Network / Pi-hole `1.0.0` | Preview; dual-instance credentialed proof outstanding |
-| Unraid `1.0.0` | Preview; approved-target credentialed proof outstanding |
-| Docker Operations | Deferred until a distinct fleet-level use case justifies its trust boundary |
+Features arrive as signed `.nadmod` packages, released independently of the
+Dashboard. Install them from the Marketplace inside NAD, or upload a `.nadmod`
+file directly if your NAD has no internet access.
 
-## Stack
+First-party plugins today: System Monitor, Proxmox VE, Pi-hole and Unraid.
 
-Next.js 15, React 19, strict TypeScript, Tailwind CSS 4, SQLite with Drizzle and
-`better-sqlite3`, Auth.js, TanStack Query, React Grid Layout, Docker Compose and
-pinned Deno `2.7.7`.
+Writing your own is a supported path, not an afterthought — the Development Kit,
+schemas, templates and CLI are in
+[`nad-plugins`](https://github.com/RoBroLabs/nad-plugins), along with the source
+of every first-party plugin.
 
-## Local development
+## How plugins are kept safe
 
-Requirements: Node.js 20+, the repository-pinned pnpm version, and Deno `2.7.7`
-when executing installed Plugins outside Docker.
+Running someone else's code against your infrastructure is the whole risk of a
+dashboard like this, so the boundaries are explicit:
+
+- **Signed and verified.** Every package is checked against a trusted key and an
+  exact digest before it is installed. Revocations and advisories arrive through
+  the same signed channel.
+- **Sandboxed.** Plugin code runs in a short-lived Deno isolate. Direct network,
+  filesystem, environment, subprocess, FFI and runtime-import access is denied.
+- **Brokered.** Outbound HTTP and notifications go through the core, restricted
+  to the scopes the plugin declared in its manifest and you approved.
+- **Secrets stay server-side.** Connection credentials are encrypted with
+  AES-256-GCM and never reach a browser or a plugin.
+- **Custom UI is contained.** Plugin surfaces render in an opaque sandbox with a
+  bounded message bridge — no ambient access to your session.
+
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) documents these boundaries in full.
+
+## What the core does
+
+Identity and first-run setup, `admin`/`member`/`restricted` roles with
+server-side authorization, personal and shared Workspaces with saved layouts,
+encrypted connection profiles, an audit log, core-owned email/Telegram/ntfy
+notifications, package install, activation, rollback and uninstall without a
+restart, and verified backups that include installed plugin artifacts.
+
+## Built with
+
+Next.js 15, React 19, TypeScript, Tailwind CSS 4, SQLite with Drizzle and
+`better-sqlite3`, Auth.js, TanStack Query, React Grid Layout, and a pinned Deno
+`2.7.7` sandbox.
+
+## Development
+
+Requirements: Node.js 20+, the pnpm version pinned in `package.json`, and Deno
+`2.7.7` to execute installed plugins outside Docker.
 
 ```bash
 pnpm install --frozen-lockfile --strict-peer-dependencies
-cp .env.example .env.local
-openssl rand -base64 32  # APP_SECRET
-openssl rand -base64 32  # AUTH_SECRET
+cp .env.example .env.local   # then set APP_SECRET and AUTH_SECRET
 pnpm dev
 ```
 
-Open <http://localhost:3000>. The first request redirects to `/setup` until an
-administrator exists. Set `NAD_ALLOW_UNSIGNED_MODULES=true` only for disposable
-local Plugin development.
+Set `NAD_ALLOW_UNSIGNED_MODULES=true` only on a disposable instance used for
+local plugin development.
 
-For a contributor source-built container:
+```bash
+pnpm test        # unit and integration
+pnpm lint
+pnpm typecheck   # run before build; Next.js regenerates types
+pnpm build
+pnpm db:backup
+pnpm admin:recover
+```
+
+To build the container from source instead of pulling it:
 
 ```bash
 docker compose --env-file .env.local \
   -f docker-compose.yml -f docker-compose.build.yml up --build -d
 ```
 
-The normal Compose file is intended to pull a reviewed multi-architecture
-release. That public image does not exist yet, so it is not currently a usable
-public installation path. Once published, end users will pull it without
-installing Node dependencies or compiling NAD.
+## Security
 
-## Commands
+Report vulnerabilities privately as described in [`SECURITY.md`](SECURITY.md).
+Please do not open a public issue for a suspected sandbox escape, signature
+bypass or credential exposure.
 
-```bash
-pnpm test
-pnpm lint
-pnpm typecheck
-pnpm build
-pnpm audit --prod
-pnpm db:backup
-pnpm db:backup:maintain
-pnpm admin:recover
-```
+## Licence
 
-Run typecheck and build sequentially because Next.js regenerates generated
-types.
-
-## Documentation
-
-- [Documentation index](./docs/README.md)
-- [Project status](./docs/STATUS.md)
-- [Initial public release board](./docs/INITIAL_PUBLIC_RELEASE.md)
-- [Outstanding roadmap](./docs/ROADMAP.md)
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Operations](./docs/OPERATIONS.md)
-- [Release checklist](./docs/RELEASE_CHECKLIST.md)
-- [Support policy](./docs/SUPPORT.md)
-- [External Module Guide](./docs/MODULE_GUIDE.md)
-
-## License
-
-NAD is licensed under the [GNU Affero General Public License v3.0](./LICENSE)
-(`AGPL-3.0-only`). If you run a modified copy as a network service, you must
-offer the source of your modified version to its users.
+[GNU Affero General Public License v3.0](./LICENSE) (`AGPL-3.0-only`). If you run
+a modified copy as a network service, you must offer its source to your users.

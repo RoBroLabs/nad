@@ -4,8 +4,8 @@
 
 NAD is split into a self-hosted core, independently released Plugin packages,
 and a maintainer-hosted Marketplace. This document describes durable system
-boundaries, not the state of a particular release. See [`STATUS.md`](STATUS.md)
-for current release and deployment identity.
+boundaries, not the state of a particular release. The `VERSION` file and the
+release notes carry current release identity.
 
 ## System boundary
 
@@ -287,6 +287,5 @@ in the bundle. A database-only copy is not a complete installed-package backup.
   bindings. Package review, least-privilege manifests, RBAC, exact-digest trust
   and revocation all remain necessary.
 
-See [`MODULE_GUIDE.md`](MODULE_GUIDE.md) for the compatibility contract and
-[`ROADMAP.md`](ROADMAP.md) for outstanding work. Marketplace publication and
-incident procedures live in the separate `nad-marketplace` repository.
+The package compatibility contract, plugin authoring guides and the Plugin
+Development Kit live in [`nad-plugins`](https://github.com/RoBroLabs/nad-plugins).

@@ -6,21 +6,17 @@ exact artifact digest where applicable.
 
 ## Supported versions
 
-NAD has no supported public version yet. Core `0.3.2` is a release candidate and
-receives pre-release security fixes; `0.2.8` is the latest recorded safe private
-rollback deployment, not a promised public support line. The proposed policy is
-in [`docs/SUPPORT.md`](docs/SUPPORT.md) and becomes effective only after the
-first public release gate passes.
+Security fixes land on the most recent published release. The compatibility
+and support policy is in [`docs/SUPPORT.md`](docs/SUPPORT.md).
 
 A signed Marketplace revocation may quarantine an exact artifact or signing key
 independently of the core support window.
 
 ## Reporting
 
-Until public GitHub private vulnerability reporting is configured, contact the
-repository owner through the private source host and request a confidential
-channel. Never open a public issue containing credentials, exploit details,
-private host data or an unpublished package.
+Use GitHub's private vulnerability reporting on this repository
+(**Security → Report a vulnerability**). Never open a public issue containing
+credentials, exploit details, private host data or an unpublished package.
 
 Include:
 

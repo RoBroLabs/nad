@@ -55,3 +55,12 @@ next-env.d.ts
 *.log
 # Kimi project memory
 .kimi-memory/
+
+# Internal working documents: status boards, roadmaps, release runbooks, agent
+# guidance and the dated operator evidence ledger. Kept on disk for development,
+# deliberately not part of the published product.
+docs/internal/
+
+# Personal deployment variant; the supported paths are the tracked compose files.
+docker-compose.dokploy.yml
+

@@ -2,7 +2,7 @@ services:
   nad:
     # The supported homelab path pulls the reviewed multi-architecture image.
     # Source builds use docker-compose.build.yml explicitly.
-    image: ${NAD_IMAGE:-ghcr.io/robrolabs/nad:0.3.2}
+    image: ${NAD_IMAGE:-ghcr.io/robrolabs/nad:0.3.3}
     restart: unless-stopped
     ports:
       - "${NAD_BIND_ADDRESS:-127.0.0.1}:3000:3000"

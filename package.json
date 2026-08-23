@@ -40,7 +40,6 @@
     "contracts:check": "node scripts/check-module-contracts.mjs",
     "release:bundle": "node scripts/generate-install-bundle.mjs",
     "release:bundle:verify": "node scripts/verify-install-bundle.mjs",
-    "public:export": "node scripts/export-public-source.mjs",
     "ci:gate": "bash scripts/ci-release-gate.sh"
   },
   "dependencies": {
