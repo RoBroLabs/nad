@@ -162,45 +162,51 @@ export function WorkspaceHeader({
     <>
       <header className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border/70 pb-3">
         {canEdit ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="-ml-2 h-9 max-w-64 gap-1.5 px-2 text-base font-semibold tracking-tight"
-              >
-                <span className="truncate">{workspace.name}</span>
-                {workspace.pinned ? <Pin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Pinned" /> : null}
-                <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
-              <DropdownMenuItem onClick={() => { setError(null); setEditOpen(true); }}>
-                <Pencil aria-hidden="true" />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={pending} onClick={() => void togglePinned()}>
-                {workspace.pinned ? <PinOff aria-hidden="true" /> : <Pin aria-hidden="true" />}
-                {workspace.pinned ? 'Unpin Workspace' : 'Pin Workspace'}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { setError(null); setAddOpen(true); }}>
-                <Plus aria-hidden="true" />
-                Add tab
-              </DropdownMenuItem>
-              {workspace.tabs.length > 1 ? (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    variant="destructive"
-                    disabled={pending}
-                    onClick={() => { setError(null); setDeleteOpen(true); }}
-                  >
-                    <Trash2 aria-hidden="true" />
-                    Delete “{activeTab.name}”…
-                  </DropdownMenuItem>
-                </>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          // The Workspace name is this page's heading, and making it a menu
+          // trigger must not take that away: without the h1 the dashboard has
+          // no heading at all for a screen reader, and the release gate looks
+          // for exactly this role.
+          <h1 className="-ml-2 min-w-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="h-9 max-w-64 gap-1.5 px-2 text-base font-semibold tracking-tight"
+                >
+                  <span className="truncate">{workspace.name}</span>
+                  {workspace.pinned ? <Pin className="size-3.5 shrink-0 text-muted-foreground" aria-label="Pinned" /> : null}
+                  <ChevronDown className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-52">
+                <DropdownMenuItem onClick={() => { setError(null); setEditOpen(true); }}>
+                  <Pencil aria-hidden="true" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={pending} onClick={() => void togglePinned()}>
+                  {workspace.pinned ? <PinOff aria-hidden="true" /> : <Pin aria-hidden="true" />}
+                  {workspace.pinned ? 'Unpin Workspace' : 'Pin Workspace'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setError(null); setAddOpen(true); }}>
+                  <Plus aria-hidden="true" />
+                  Add tab
+                </DropdownMenuItem>
+                {workspace.tabs.length > 1 ? (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      disabled={pending}
+                      onClick={() => { setError(null); setDeleteOpen(true); }}
+                    >
+                      <Trash2 aria-hidden="true" />
+                      Delete “{activeTab.name}”…
+                    </DropdownMenuItem>
+                  </>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </h1>
         ) : (
           <h1 className="max-w-64 truncate text-base font-semibold tracking-tight">
             {workspace.name}
