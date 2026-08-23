@@ -134,7 +134,14 @@ test('fresh setup, authentication, RBAC, security headers and responsive accessi
   await replacePersonalWorkspaceWithLegacyRouteIds();
   await page.goto('/');
   await expect(page).toHaveURL(/\/w\/legacy-home-workspace%3Abrowser-gate\/legacy-home-tab%3Abrowser-gate$/);
-  await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
+  // The Workspace name is the page heading and the active tab is marked
+  // current, rather than the tab name being a second competing h1 as it was
+  // before the single-band header. Assert both: a heading identifying the
+  // page, and that the tab nav actually says which tab you are on.
+  await expect(page.getByRole('heading', { level: 1, name: 'Home' })).toBeVisible();
+  await expect(
+    page.getByRole('navigation', { name: 'Workspace tabs' }).locator('[aria-current="page"]'),
+  ).toHaveText('Overview');
   await expectNoSeriousAccessibilityViolations(page);
 
   await page.goto('/settings/users');
