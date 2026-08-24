@@ -1,13 +1,37 @@
 version: 2
 
+# Grouped so routine maintenance is one review, not eleven.
+#
+# The previous config had no grouping and a limit of 10, so a single weekly run
+# opened ten npm pull requests plus one for actions. At that volume the batch
+# stops being read, and the majors that genuinely need attention are buried
+# among patch bumps that do not.
+#
+# Minor and patch updates arrive as one pull request per ecosystem. Majors are
+# deliberately left ungrouped: each one needs its own review and usually its own
+# code change.
+
 updates:
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
