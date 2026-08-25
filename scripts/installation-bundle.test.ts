@@ -39,7 +39,11 @@ afterEach(() => {
 });
 
 describe('installation bundle generator', () => {
-  it('creates deterministic, pull-only files and validates extracted Compose without the source tree', () => {
+  // Builds two complete installation bundles and, where Docker is available,
+  // validates the extracted Compose file. That does not fit in vitest's 5s
+  // default on a loaded CI runner, and it has already failed a gate once for
+  // no reason but timing.
+  it('creates deterministic, pull-only files and validates extracted Compose without the source tree', { timeout: 60_000 }, () => {
     const first = directory();
     const second = directory();
     const firstResult = JSON.parse(generate(first, hasDockerCompose() ? ['--validate-compose'] : []));
