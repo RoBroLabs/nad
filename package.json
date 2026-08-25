@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.0.0",
-    "ajv": "8.18.0",
+    "ajv": "8.20.0",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^11.0.0",
     "class-variance-authority": "^0.7.0",
